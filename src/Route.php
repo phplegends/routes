@@ -14,7 +14,7 @@ class Route
     /**
      * @var string
      * */
-    protected $methods = ['*'];
+    protected $verbs = ['*'];
 
     /**
      * @var string
@@ -42,7 +42,7 @@ class Route
     const ANY_METHOD_WILDCARD = '*';
 
     protected $patternTranslations = [
-        '*'      => '(.*)',
+        '*'      => '(.*?)',
         '{num}'  => '(\d+)',
         '{num?}'  => '?(\d+)?',
         '{str}'  => '([a-z0-9-_]+)',
@@ -53,11 +53,11 @@ class Route
         '{date?}' => '?(\d{4}\/\d{2}\/\d{2})?'
     ];
 
-    public function __construct($pattern, $action = null, array $methods = ['*'])
+    public function __construct($pattern, $action = null, array $verbs = ['*'])
     {
         $this->setPattern($pattern);
 
-        $this->setMethods($methods);
+        $this->setMethod($verbs);
 
         $this->setAction($action);
     }
@@ -88,7 +88,7 @@ class Route
 
     public function setPattern($pattern)
     {   
-        $this->pattern = $pattern;
+        $this->pattern = ltrim($pattern, '/');
     }
 
     public function getPattern()
@@ -96,31 +96,31 @@ class Route
         return $this->pattern;
     }
 
-    public function setMethod($methods)
+    public function setMethod($verbs)
     {
-        $this->methods = (array) $methods;
+        $this->verbs = (array) $verbs;
 
         return $this;
     }
 
-    public function getMethods()
+    public function getVerbs()
     {
-        return $this->methods;
+        return $this->verbs;
     }
 
     /**
      * Asserts if http verb is accepted
      * @param string $method
      * */
-    public function acceptedMethod($method)
+    public function acceptedVerbs($verb)
     {   
 
-        if (isset($this->methods[0]) && $this->methods[0] == static::ANY_METHOD_WILDCARD) {
+        if (isset($this->verbs[0]) && $this->verbs[0] == static::ANY_METHOD_WILDCARD) {
 
             return true;
         }
 
-        return in_array(strtoupper($method), $this->getMethods());
+        return in_array(strtoupper($verb), $this->getVerbs());
     }
 
     public function getAction()
@@ -136,6 +136,23 @@ class Route
         }
 
         return [new $this->action[0], $this->action[1]];
+    }
+
+    public function getActionAsClosure()
+    {
+        if ($this->action instanceof \Closure)
+        {
+            return $this->action;
+        }
+
+        $me = $this;
+
+        return function () use ($me) {
+
+            $action = $me->getAction();
+
+            return call_user_func_array($action, func_get_args());
+        };
     }
 
     public function getParsedPattern()
@@ -155,14 +172,12 @@ class Route
 
     public function match($url)
     {
-        return preg_match($this->getParsedPattern(), trim($url)) > 0;
-    }
+        if (preg_match($this->getParsedPattern(), trim($url), $matches) > 0) {
 
-    public function getParameters($url)
-    {
-        preg_match($this->getParsedPattern(), $url, $matches);
+            return array_slice($matches, 1);
+        }
 
-        return array_slice($matches, 1);
+        return false;
     }
 
     public function setName($name)
@@ -187,24 +202,16 @@ class Route
         return $this->filters;
     }
 
-
-    protected function validateRoutable($class)
+    protected function validateRoutable($controller, $action)
     {
-        $routable = '\PHPLegends\Routes\Routable';
 
-        if (! is_subclass_of($class, $routable, true)) {
+        if (! method_exists($controller, $action)) {
 
-            $message = sprintf("%s doesn't exist or doesnt implements %s", $class,$routable);
-
-            throw new RouteException($message);
-        }
-
-        if (! method_exists($parts[0], $parts[1])) {
-
-            throw new \InvalidArgumentException("Action {$parts[0]}::{$parts[1]}() doesn't exist");
+            throw new \InvalidArgumentException("Action {$controller}::{$action}() doesn't exist");
         }
 
         return true;
     }
+
 
 }

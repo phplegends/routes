@@ -1,0 +1,23 @@
+{
+    "name": "phplegends/routes",
+    "description": "A package for work with routes in php",
+    "type": "package",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Wallace de Souza",
+            "email": "wallacemaxters@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "phplegends/collections" :  "1.*"
+    },
+
+    "autoload" : {
+
+        "psr-4" : {
+            "PHPLegends\\Routes\\" :  "src"
+        }
+    }
+}

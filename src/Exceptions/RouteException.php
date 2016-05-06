@@ -2,4 +2,4 @@
 
 namespace PHPLegends\Routes\Exceptions;
 
-class RouteException extends \RuntTimeException {}
+class RouteException extends \RunTimeException {}
