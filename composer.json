@@ -3,6 +3,7 @@
     "description": "A package for work with routes in php",
     "type": "package",
     "license": "MIT",
+    "keywords" : ["routes", "router", "routing"],
     "authors": [
         {
             "name": "Wallace de Souza",
