@@ -3,6 +3,7 @@
 namespace PHPLegends\Routes;
 
 use PHPLegends\Routes\Exceptions\RouteException;
+use PHPLegends\Routes\Exceptions\HttpException;
 
 /**
  * @author Wallace de Souza Vizerra <wallacemaxters@gmail.com>
@@ -38,7 +39,6 @@ class Route
      * */
     protected $filters = [];
 
-
     const ANY_METHOD_WILDCARD = '*';
 
     protected $patternTranslations = [
@@ -53,15 +53,30 @@ class Route
         '{date?}' => '?(\d{4}\/\d{2}\/\d{2})?'
     ];
 
-    public function __construct($pattern, $action = null, array $verbs = ['*'])
+    /**
+     * The constructor
+     * 
+     * @param string $pattern
+     * @param string|Closure $action
+     * @param array $verbs
+     * @return void
+     * */
+    public function __construct($pattern, $action, array $verbs = ['*'])
     {
         $this->setPattern($pattern);
 
-        $this->setMethod($verbs);
+        $this->setVerbs($verbs);
 
         $this->setAction($action);
     }
 
+    /**
+     * Sets the action
+     * 
+     * @param string $action
+     * @throws \LengthException
+     * @return self
+     * */
     public function setAction ($action)
     {
         if ($action instanceof \Closure) {
@@ -86,19 +101,39 @@ class Route
 
     }
 
+    /**
+     * Sets the pattern for route
+     * 
+     * @param string $pattern
+     * @return self
+     * */
     public function setPattern($pattern)
     {   
         $this->pattern = ltrim($pattern, '/');
+
+        return $this;
     }
 
+
+    /**
+     * Gets the value of pattern.
+     *
+     * @return string
+     */
     public function getPattern()
     {
         return $this->pattern;
     }
 
-    public function setMethod($verbs)
+    /**
+     * Sets the verbs of route
+     * 
+     * @param array|string $verbs
+     * @return self
+     * */
+    public function setVerbs($verbs)
     {
-        $this->verbs = (array) $verbs;
+        $this->verbs = array_map('strtoupper', (array) $verbs);
 
         return $this;
     }
@@ -110,9 +145,10 @@ class Route
 
     /**
      * Asserts if http verb is accepted
+     * 
      * @param string $method
      * */
-    public function acceptedVerbs($verb)
+    public function acceptedVerb($verb)
     {   
 
         if (isset($this->verbs[0]) && $this->verbs[0] == static::ANY_METHOD_WILDCARD) {
@@ -120,14 +156,35 @@ class Route
             return true;
         }
 
-        return in_array(strtoupper($verb), $this->getVerbs());
+        return in_array(strtoupper($verb), $this->getVerbs(), true);
     }
 
+    /**
+     * Validate if the verb is allowed. If is not allowed, throws an exception
+     * 
+     * @throws HttpException
+     * @param string $verb
+     * @return void
+     * */
+    public function validateVerb($verb)
+    {
+        if (! $this->acceptedVerb($verb))
+        {
+            throw new HttpException("Method {$verb} is not allowed", 405);
+        }
+    }
+
+    /**
+     * @return array|Closure
+     * */
     public function getAction()
     {
         return $this->action;
     }
 
+    /**
+     * @return callable
+     * */
     public function getActionAsCallable()
     {
         if ($this->action instanceof \Closure) {
@@ -138,6 +195,11 @@ class Route
         return [new $this->action[0], $this->action[1]];
     }
 
+    /**
+     * Forces the action to be returns Closure
+     * 
+     * @return \Closure
+     * */
     public function getActionAsClosure()
     {
         if ($this->action instanceof \Closure)
@@ -165,14 +227,29 @@ class Route
         return $this->patternTranslations;
     }
 
+    /**
+     * Creates a new wildcard for regex
+     * 
+     * @param string $wildcard
+     * @param string $regex
+     * @return self
+     * */
     public function where($wildcard, $regex)
     {
         $this->patternTranslations[$wildcard] = $regex;
+
+        return $this;
     }
 
-    public function match($url)
+    /**
+     * Determines if uri matches with regex. If match, return params of uri
+     * 
+     * @param string $uri
+     * @return false | array
+     * */
+    public function match($uri)
     {
-        if (preg_match($this->getParsedPattern(), trim($url), $matches) > 0) {
+        if (preg_match($this->getParsedPattern(), trim($uri), $matches) > 0) {
 
             return array_slice($matches, 1);
         }
@@ -202,6 +279,12 @@ class Route
         return $this->filters;
     }
 
+    /**
+     * Validates if the action is valid
+     * 
+     * @param string $controller
+     * @param string $action
+     * */
     protected function validateRoutable($controller, $action)
     {
 
@@ -212,6 +295,4 @@ class Route
 
         return true;
     }
-
-
 }

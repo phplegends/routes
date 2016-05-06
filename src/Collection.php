@@ -5,7 +5,9 @@ namespace PHPLegends\Routes;
 use PHPLegends\Collections\ListCollection;
 
 /**
- * Coleção de rotas
+ * Collection of Routes
+ * 
+ * @author Wallace de Souza Vizerra <wallacemaxters@gmail.com>
  * */
 class Collection extends ListCollection
 {
@@ -41,13 +43,9 @@ class Collection extends ListCollection
 	*/
 	public function find($pattern)
 	{
-
-		foreach ($this->items as $route) {
-
-			if ($route->match($pattern)) {
-
-				return $route;
-			}
-		}
+		return $this->first(function ($route) use($pattern)
+		{	
+			return $route->match($pattern) !== false;
+		});
 	}
 }

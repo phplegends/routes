@@ -8,6 +8,8 @@ $router = new Router;
 
 $router->get('/', function ()
 {
+	if ($_GET) print_r($_GET);
+
 	return 'Welcome to home page';
 });
 
@@ -16,22 +18,23 @@ $router->get('/info', function ()
 	return 'Page of Info';
 });
 
-$router->get('/param/{str?}', function ($string = null)
+$router->addRoute(['get', 'put'], '/param/{str}', function ($string = null)
 {
 	return sprintf('You param passed is "%s"', $string);
 });
 
-$router->addRoute(['*'], '*', function ()
-{
-	http_response_code(404);
-
-	return 'Página não existe';	
-});
-
-
 header('content-type: text/html;charset=utf-8;');
 
-echo $router->dispatch($_SERVER['REQUEST_URI']);
+try {
+
+	echo $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
+
+} catch (\PHPLegends\Routes\Exceptions\HttpException $e) {
+
+	http_response_code($e->getStatusCode());
+
+	throw $e;
+}
 
 
 

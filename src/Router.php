@@ -1,6 +1,15 @@
 <?php
 
-namespace  PHPLegends\Routes;
+namespace PHPLegends\Routes;
+
+use PHPLegends\Routes\Exceptions\HttpException;
+
+/**
+ * This class is a tool for easy way for create routes in collection
+ * 
+ * @author Wallace de Souza Vizerra <wallacemaxters@gmail.com>
+ * 
+ * */
 
 class Router
 {
@@ -14,7 +23,6 @@ class Router
 	 * @var \WallaceMaxters\SevenFramework\Routing\RouteCollection
 	 *
 	 * */
-
 	protected $routes;
 
 	/**
@@ -33,6 +41,10 @@ class Router
 		$this->basePath = rtrim($basePath, '/');
 	}
 
+	/**
+	 * @param string $uri
+	 * @return Route | null
+	 * */
 	public function findByUri($uri)
 	{	
 		return $this->routes->first(function ($route) use($uri) {
@@ -41,17 +53,22 @@ class Router
 
 	}
 
-	public function dispatch($uri, $method = '*', \Closure $closure = null)
+	public function dispatch($uri, $verb, \Closure $closure = null)
 	{
+		$uri = strtok($uri, '?');
+
 		$route = $this->findByUri($uri);
 
-		if (! $route) return false;
+		if (! $route) {
 
-		$route->acceptedVerbs($method);
+			throw new HttpException("Route not found", 404);
+		}
+
+		$route->validateVerb($verb);
 
 		$closure && $closure ($route);
 
-		return call_user_func_array($route->getAction(), $route->match($uri));
+		return call_user_func_array($route->getActionAsCallable(), $route->match($uri));
 		
 	}
 
@@ -67,14 +84,14 @@ class Router
 		});
 	}
 
-	public function addRoute(array $methods, $pattern, $action)
+	public function addRoute(array $verbs, $pattern, $action)
 	{
 
 		$pattern = trim($this->basePath . '/' . $pattern, '/');
 
 		$newRoute = new Route($pattern, $action);
 
-		$newRoute->setMethod($methods);
+		$newRoute->setVerbs($verbs);
 
 		$this->routes->add($newRoute);
 
