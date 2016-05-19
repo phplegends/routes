@@ -5,7 +5,7 @@ namespace PHPLegends\Routes\Exceptions;
 /**
  * @author Wallace de Souza Vizerra <wallacemaxters@gmail.com>
  * */
-class NotFoundException extends HttpException
+class NotFoundException extends RouteException
 {
 	/**
 	 * @param string $message

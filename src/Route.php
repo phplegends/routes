@@ -160,21 +160,6 @@ class Route
     }
 
     /**
-     * Validate if the verb is allowed. If is not allowed, throws an exception
-     * 
-     * @throws HttpException
-     * @param string $verb
-     * @return void
-     * */
-    public function validateVerb($verb)
-    {
-        if (! $this->acceptedVerb($verb))
-        {
-            throw new HttpException("Method {$verb} is not allowed", 405);
-        }
-    }
-
-    /**
      * @return array|Closure
      * */
     public function getAction()
@@ -269,14 +254,30 @@ class Route
         return $this->name;
     }
 
+    /**
+     * 
+     * @param string[] $filters
+     * @return self
+     * */
     public function setFilters(array $filters)
     {
         $this->filters = $filters;
+
+        return $this;
     }
 
     public function getFilters()
     {
         return $this->filters;
+    }
+
+    /**
+     * Check if route contains a filter
+     * @return boolean
+     * */
+    public function hasFilter($name)
+    {
+        return in_array($name, $this->filters, true);
     }
 
     /**

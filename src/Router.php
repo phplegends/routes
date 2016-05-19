@@ -20,25 +20,30 @@ class Router
 	protected $basePath = '';	
 
 	/**
-	 * @var \WallaceMaxters\SevenFramework\Routing\RouteCollection
+	 * @var \PHPLegends\Routes\RouteCollection
 	 *
 	 * */
 	protected $routes;
 
 	/**
-	 * @var array
+	 * 
+	 * @var PHPLegends\Routes\FilterCollection
 	 * */
-	protected $filters = [];
 
+	protected $filters;
 
 	public function __construct(Collection $routes = null)
 	{	
 		$this->routes = $routes ?: new Collection;
+
+		$this->filters = new FilterCollection;
 	}
 
 	public function setBasepath($basePath)
 	{
 		$this->basePath = rtrim($basePath, '/');
+
+		return $this;
 	}
 
 	/**
@@ -53,23 +58,27 @@ class Router
 
 	}
 
-	public function dispatch($uri, $verb, \Closure $closure = null)
+	public function dispatch(Dispatchable $dispatcher)
 	{
-		$uri = strtok($uri, '?');
+		$dispatcher->setRouter($this);
 
-		$route = $this->findByUri($uri);
+		try {
 
-		if (! $route) {
+			$result = $dispatcher->dispatch();
 
-			throw new HttpException("Route not found", 404);
+		} catch (\Exception $e) {
+
+			return $dispatcher->handleException($e);
 		}
 
-		$route->validateVerb($verb);
+		return $result;
+	}
 
-		$closure && $closure ($route);
-
-		return call_user_func_array($route->getActionAsCallable(), $route->match($uri));
-		
+	public function findByUriAndVerb($uri, $verb)
+	{
+		return $this->routes->first(function ($route) use ($uri, $verb) {
+			return $route->match($uri) !== false && $route->acceptedVerb($verb);
+		});
 	}
 
 	/**
@@ -83,6 +92,15 @@ class Router
 			return $route->getName() === $name;
 		});
 	}
+
+	/**
+	 * Create a new route instance and attach to Collection
+	 * 
+	 * @param array $verbs
+	 * @param string $pattern
+	 * @param string $action
+	 * @return \PHPLegends\Routes\Route
+	 * */
 
 	public function addRoute(array $verbs, $pattern, $action)
 	{
@@ -136,4 +154,32 @@ class Router
 		return $this->routes;
 	}
 
+	public function getFilters()
+	{
+		return $this->filters;
+	}    
+
+	public function addFilter($name, callable $callback)
+	{
+		$filter = new Filter($name, $callback);
+
+		$this->filters->add($filter);
+
+		return $filter;
+	}
+
+	public function processRouteFilters(Route $route)
+	{
+		$filters = $this->filters->filter(function ($filter) use($route) {
+			return $route->hasFilter($filter->getName());
+		});
+
+		foreach ($filters as $filter)
+		{
+			if (null !== $result = $filter($route)) {
+
+				return $result;
+			}
+		}
+	}
 }

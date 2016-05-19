@@ -16,7 +16,7 @@ class CollectionTest extends PHPUnit_Framework_TestCase
 
 		$this->assertCount(1, $routes);
 
-		$this->assertEquals($r, $routes->find('/test/method/one/two'));
+		$this->assertEquals($r, $routes->findByUri('/test/method/one/two'));
 
 	}
 
