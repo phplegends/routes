@@ -1,7 +1,8 @@
 <?php
 
 namespace PHPLegends\Routes;
-use PHPLegends\Routes\Exceptions\RouteException;
+use PHPLegends\Routes\Exceptions\NotFoundException;
+use PHPLegends\Routes\Exceptions\InvalidVerbException;
 
 class Dispatcher extends AbstractDispatcher
 {
@@ -17,14 +18,16 @@ class Dispatcher extends AbstractDispatcher
 
 		if ($routes->isEmpty())
 		{
-			throw new RouteException("Unable to find '{$this->uri}'");
+			throw new NotFoundException("Unable to find '{$this->uri}'");
 		}
 
 		$route = $routes->findByVerb($this->verbs);
 
 		if ($route === null)
 		{
-			throw new RouteException('Unable to find');
+			throw new InvalidVerbException(
+				sprintf('Invalid verb for route "%s"', $this->uri)
+			);
 		}
 
 		$result = $this->getRouter()->processRouteFilters($route);
