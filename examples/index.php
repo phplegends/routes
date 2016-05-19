@@ -14,7 +14,7 @@ $router->addFilter('age', function ()
 	}
 });
 
-$router->get('/', function ()
+$router->post('/', function ()
 {
 	if ($_GET) print_r($_GET);
 
