@@ -2,7 +2,6 @@
 
 namespace PHPLegends\Routes;
 
-use PHPLegends\Routes\Exceptions\HttpException;
 
 /**
  * This class is a tool for easy way for create routes in collection
