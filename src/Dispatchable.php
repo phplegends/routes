@@ -5,24 +5,8 @@ namespace PHPLegends\Routes;
 interface Dispatchable
 {
 	/**
-	 * Sets the router for current dispatch
-	 * @param Router $route
-	 * */
-	public function setRouter(Router $route);
-
-	/**
-	 * @throws \RunTimeException
-	 * */
-	public function dispatch();
-
-	/**
 	 * 
-	 * @return Router
+	 * @param PHPLegends\Routes\Router
 	 * */
-	public function getRouter();
-
-	/**
-	 * @param \Exception $e
-	 * */
-	public function handleException(\Exception $e);
+	public function dispatch(Router $router);
 }
