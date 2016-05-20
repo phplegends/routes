@@ -59,18 +59,7 @@ class Router
 
 	public function dispatch(Dispatchable $dispatcher)
 	{
-		$dispatcher->setRouter($this);
-
-		try {
-
-			$result = $dispatcher->dispatch();
-
-		} catch (\Exception $e) {
-
-			return $dispatcher->handleException($e);
-		}
-
-		return $result;
+		return $dispatcher->dispatch($this);
 	}
 
 	public function findByUriAndVerb($uri, $verb)
@@ -165,20 +154,5 @@ class Router
 		$this->filters->add($filter);
 
 		return $filter;
-	}
-
-	public function processRouteFilters(Route $route)
-	{
-		$filters = $this->filters->filter(function ($filter) use($route) {
-			return $route->hasFilter($filter->getName());
-		});
-
-		foreach ($filters as $filter)
-		{
-			if (null !== $result = $filter($route)) {
-
-				return $result;
-			}
-		}
 	}
 }
