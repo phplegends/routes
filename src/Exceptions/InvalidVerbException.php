@@ -13,6 +13,7 @@ class InvalidVerbException extends RouteException
 	 * @var int
 	 * */
 	protected $statusCode;
+	
 
 	/**
 	 * Constructor
