@@ -14,32 +14,25 @@ $router->addFilter('age', function ()
 	}
 });
 
-$router->post('/', function ()
-{
-	if ($_GET) print_r($_GET);
-
+$router->get('/', function () {
 	return 'Welcome to home page';
 
 })->setFilters(['age']);
 
-$router->get('/info', function ()
-{
+$router->get('/info', function () {
 	return 'Page of Info';
 });
 
-$router->addRoute(['get', 'put'], '/param/{str}', function ($string = null)
-{
+$router->addRoute(['get', 'put'], '/param/{str}', function ($string) {
 	return sprintf('You param passed is "%s"', $string);
 });
 
 header('content-type: text/html;charset=utf-8;');
 
-$dispatch = new Dispatcher(
+$result = $router->dispatch(new Dispatcher(
 	strtok($_SERVER['REQUEST_URI'], '?'), 
 	$_SERVER['REQUEST_METHOD']
-);
+));
 
-echo $router->dispatch($dispatch);
-
-exit(1);
+echo $result;
 
