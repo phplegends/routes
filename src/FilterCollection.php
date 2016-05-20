@@ -25,5 +25,37 @@ class FilterCollection extends BaseCollection
 			return strpos($filter->getName(), $name) === 0;
 		});
 	}
+
+	/**
+	 * 
+	 * @param Route $route
+	 * @return null | mixed
+	 * */
+
+	public function filterByRoute(Route $route)
+	{
+		return $this->filter(function ($filter) use($route) {
+			return $route->hasFilter($filter->getName());
+		});
+	}
+
+	/**
+	 * Call every filter by route. If result is not null, the result is returned and loop * break
+	 * 
+	 * @param Route $route
+	 * @return null | mixed
+	 * */
+	public function processRouteFilters(Route $route)
+	{
+		foreach ($this->filterByRoute($route) as $filter) {
+
+			$result = call_user_func_array($filter, func_get_args());
+			
+			if ($result !== null) {
+
+				return $result;
+			}
+		}
+	}
 }
 
