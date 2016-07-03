@@ -22,6 +22,12 @@ class Result
      * */
     protected $callback;
 
+    /**
+     * 
+     * 
+     * @param callable $callback
+     * @param array $arguments
+     * */
     public function __construct(callable $callback, array $arguments = [])
     {
         $this->callback = $callback;
@@ -53,7 +59,6 @@ class Result
     /**
      * 
      * @return boolean
-     * 
      * */
     public function isClosure()
     {
