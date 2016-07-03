@@ -74,7 +74,8 @@ class Router
 	public function findByUri($uri)
 	{	
 		return $this->routes->first(function ($route) use($uri) {
-			return $route->match($uri) !== false;
+
+			return $route->isValid($uri);
 		});
 
 	}
@@ -87,7 +88,8 @@ class Router
 	public function findByUriAndVerb($uri, $verb)
 	{
 		return $this->routes->first(function ($route) use ($uri, $verb) {
-			return $route->match($uri) !== false && $route->acceptedVerb($verb);
+
+			return $route->isValid($uri) && $route->acceptedVerb($verb);
 		});
 	}
 

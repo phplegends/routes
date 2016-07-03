@@ -3,7 +3,6 @@
 namespace PHPLegends\Routes;
 
 use PHPLegends\Routes\Exceptions\RouteException;
-use PHPLegends\Routes\Exceptions\HttpException;
 
 /**
  * @author Wallace de Souza Vizerra <wallacemaxters@gmail.com>
@@ -46,14 +45,14 @@ class Route
      * @var array
      * */
     protected $patternTranslations = [
-        '*'      => '(.*?)',
-        '{num}'  => '(\d+)',
+        '*'       => '(.*?)',
+        '{num}'   => '(\d+)',
         '{num?}'  => '?(\d+)?',
-        '{str}'  => '([a-z0-9-_]+)',
+        '{str}'   => '([a-z0-9-_]+)',
         '{str?}'  => '?([a-z0-9-_]+)?',
-        '/'      => '\/',
-        '\\'     => '\\\\',
-        '{date}' => '(\d{4}\/\d{2}\/\d{2})',
+        '/'       => '\/',
+        '\\'      => '\\\\',
+        '{date}'  => '(\d{4}\/\d{2}\/\d{2})',
         '{date?}' => '?(\d{4}\/\d{2}\/\d{2})?'
     ];
 
@@ -236,6 +235,8 @@ class Route
     /**
      * Determines if uri matches with regex. If match, return params of uri
      * 
+     * @deprecated since 2016-07-02 (use isValid or getResult instead of)
+     * 
      * @param string $uri
      * @return false | array
      * */
@@ -248,6 +249,36 @@ class Route
 
         return false;
     }
+
+    /**
+     * 
+     * @param string $uri
+     * @return boolean
+     * */
+    public function isValid($uri)
+    {
+        return preg_match($this->getParsedPattern(), $uri) > 0;
+    }
+
+    /**
+     * 
+     * Get result of route based on uri
+     * 
+     * @param string $uri
+     * @return Result
+     * @throws RouteException
+     * */
+    public function getResult($uri)
+    {
+
+        if (preg_match($this->getParsedPattern(), $uri, $matches) > 0) {
+
+            return new Result($this->getActionAsCallable(), array_slice($matches, 1));
+        }
+
+        throw new RouteException("The '{$uri}' doesn't contains result for current route");
+    }
+
 
     /**
      * Sets the name of route

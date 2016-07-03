@@ -6,16 +6,33 @@ use PHPLegends\Routes\Route;
 class RouteTest extends PHPUnit_Framework_TestCase
 {
 
-	public function test()
+	public function setUp()
 	{
-		$r = new Route('/home/{str}/{str}', 'RouteTest::_routeMethod', ['GET', 'HEAD']);
+		$this->route = new Route('/home/{str}/{str}', 'RouteTest::_routeMethod', ['GET', 'HEAD']);
 
-		$this->assertEquals(
-			['one', 'two'],
-			$r->match('home/one/two')
-		);
+		$this->routeClosure = new Route('closure/{num}/{str?}', function ($a, $b = '__none__')
+		{ 
+			return "A|B = $a|$b"; 
 
-		call_user_func_array($r->getAction(), $r->match('home/one/two'));
+		}, ['POST']);
+	}
+
+	public function testAllMethodsOfUriMatching()
+	{
+		
+		$result = $this->route->getResult('home/one/two');
+
+		// check the arguments
+
+		$this->assertEquals(['one', 'two'], $result->getArguments());
+
+		// Invoke the action
+
+		$result->invoke();
+
+		// is valid?
+
+		$this->assertTrue($this->route->isValid('home/hello/batman'));
 	}
 
 	public function _routeMethod($one, $two)
@@ -25,20 +42,27 @@ class RouteTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('two', $two);
 	}
 
-	public function testClosure()
+	public function testAllMethodsOfUriMatchingOfClosure()
 	{
-		$r = new Route('/home/{num}', function ($id)
-		{
-			return (int) $id;
-		});
+		// Testing "optional" route pattern
 
-		$this->assertFalse($r->match('home/string'));
+		$result = $this->routeClosure->getResult('closure/5');
 
-		$this->assertEquals(['5'], $r->match('home/5'));
+		// check the arguments
 
-		$response = call_user_func_array($r->getAction(), $r->match('home/4'));
+		$this->assertEquals(['5'], $result->getArguments());
 
-		$this->assertEquals(4, $response);
+		// Invoke the action
+
+		$this->assertEquals('A|B = 5|__none__', $result->invoke());
+
+
+		$result = $this->routeClosure->getResult('closure/5/title-of-post');
+
+		$this->assertEquals(['5', 'title-of-post'], $result->getArguments());
+
+		$this->assertEquals('A|B = 5|title-of-post', $result());
+
 	}
 	
 }
