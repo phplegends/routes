@@ -64,12 +64,12 @@ class Collection extends ListCollection
 
 	/**
 	 * 
-	 * @param string $pattern
+	 * @param string $uri
 	 * @return \PHPLegends\Routes\Router
 	 * */
-	public function filterByUri($pattern)
+	public function filterByUri($uri)
 	{
-		return $this->filter($this->getUriFilter($pattern));
+		return $this->filter($this->getUriFilter($uri));
 	}
 
 	/**
@@ -91,19 +91,19 @@ class Collection extends ListCollection
 		};
 	}
 
-	protected function getUriFilter($pattern)
+	protected function getUriFilter($uri)
 	{
-		return function ($route) use ($pattern) {
+		return function ($route) use ($uri) {
 
-			return $route->match($pattern) !== false;
+			return $route->isValid($uri);
 		};
 	}
 
-
 	/**
 	 * 
+	 * @param callable $callback
 	 * 
-	 * 
+	 * @return Listcollection
 	 * */
 	public function map(callable $callback = null)
 	{	
