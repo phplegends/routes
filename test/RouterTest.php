@@ -140,5 +140,11 @@ class RouterTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('in_group.creator', $route->getName());
 
 		$this->assertEquals(['a', 'b', 'c'], $route->getFilters());
+
+		$this->assertCount(2, $this->router->getCollection()->filterByPrefixName('in_group'));
+
 	}
+
+
+
 }

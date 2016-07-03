@@ -6,36 +6,52 @@ use PHPLegends\Routes\Route;
 
 class CollectionTest extends PHPUnit_Framework_TestCase
 {
-	public function test()
+	public function testAddAndCount()
 	{
 		$routes = new Collection();
 
-		$r = new Route('/test/method/{str}/{str}', 'CollectionTest::routeMethod');
+		$route = new Route('/test/method/{str}/{str}', 'CollectionTest::routeMethod');
 
-		$routes->add($r);
+		$routes->add($route);
 
 		$this->assertCount(1, $routes);
 
-		$this->assertEquals($r, $routes->findByUri('/test/method/one/two'));
+		$this->assertEquals($route, $routes->findByUri('/test/method/one/two'));
 
 	}
 
-	public function routeMethod($one, $two) {
-	}
+	public function routeMethod($one, $two) {}
 
 
 	public function testMap()
 	{
 		$routes = new Collection();
 
-		$routes->add(new Route('a', function () {}));
-		$routes->add(new Route('b', function () {}));
-		$routes->add(new Route('c', function () {}));
+		$routes->add(new Route('a', function () {
 
-		$patterns = $routes->map(function ($r) {
-			return $r->getPattern();
+			return 'A';
+
+		}));
+
+		$routes->add(new Route('b', function () {
+
+			return 'B';
+
+		}));
+
+		$routes->attach(new Route('c', function () {
+
+			return 'C';
+			
+		}));
+
+		$patterns = $routes->map(function (Route $route) {
+
+			return $route->getPattern();
 		});
 
 		$this->assertEquals($patterns->all(), ['a', 'b', 'c']);
 	}
+
+
 }

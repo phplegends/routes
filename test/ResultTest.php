@@ -30,6 +30,5 @@ class ResultTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals('Hello a-b-c', call_user_func($this->result));
     }
-
     
 }

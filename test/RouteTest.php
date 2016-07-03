@@ -63,7 +63,6 @@ class RouteTest extends PHPUnit_Framework_TestCase
 
 		$this->assertEquals('A|B = 5|__none__', $result->invoke());
 
-
 		$result = $this->routeClosure->getResult('closure/5/title-of-post');
 
 		$this->assertEquals(['5', 'title-of-post'], $result->getArguments());
@@ -86,7 +85,41 @@ class RouteTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(['a', 'b', 'c'], $this->route->getFilters());
 
 		$this->assertEquals(['x', 'y', 'z'], $this->routeClosure->getFilters());
+	}	
+
+	public function testGetVerbs()
+	{
+		$route = new Route('/', function () {});
+
+		$this->assertEquals(['*'], $route->getVerbs());
+
+		$this->assertEquals(['GET', 'HEAD'], $this->route->getVerbs());
+
+		$this->assertEquals(['POST'], $this->routeClosure->getVerbs());
 	}
 
-	
+	public function testAddFilters()
+	{
+		$route = new Route('/', function () {});
+
+		$route->addFilter('before.auth', 'before.age');
+
+		$route->addFilter(['x', 'y']);
+
+		$this->assertEquals(['before.auth', 'before.age', 'x', 'y'], $route->getFilters());
+	}
+
+	public function testHasFilter()
+	{
+		$route = new Route('/', function () {});
+
+		$this->assertFalse($route->hasFilter('before.age'));
+
+		$route->addFilter('before.age');
+
+		$this->assertTrue($route->hasFilter('before.age'));
+		
+	}
+
+
 }
