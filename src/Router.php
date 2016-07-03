@@ -16,7 +16,7 @@ class Router
 	 * @var string
 	 *
 	 * */
-	protected $basePath = '';	
+	protected $prefixPath = '';	
 
 	/**
 	 * @var \PHPLegends\Routes\RouteCollection
@@ -31,19 +31,41 @@ class Router
 
 	protected $filters;
 
-	public function __construct(Collection $routes = null)
+	/**
+	 * 
+	 * @var string
+	 * */
+	protected $namespace;
+
+	/**
+	 * 
+	 * @var string
+	 * */
+	protected $prefixName;
+
+	/**
+	 * Default filters name for created route in collection
+	 * 
+	 * @var array 
+	 * */
+	protected $defaultFilters = [];
+
+	/**
+	 * 
+	 * 
+	 * @param \PHPLegends\Routes\Route | null $routes
+	 * @param array $options
+	 * */
+	public function __construct(Collection $routes = null, array $options = [])
 	{	
 		$this->routes = $routes ?: new Collection;
 
 		$this->filters = new FilterCollection;
+
+		$options && $this->setOptions($options);
 	}
 
-	public function setBasepath($basePath)
-	{
-		$this->basePath = rtrim($basePath, '/');
 
-		return $this;
-	}
 
 	/**
 	 * @param string $uri
@@ -70,8 +92,9 @@ class Router
 	}
 
 	/**
-	* Returns route by given name
-	* @param string $name
+	 * Returns route by given name
+	 * 
+	 * @param string $name
 	*/
 	public function findByName($name)
 	{
@@ -87,54 +110,49 @@ class Router
 	 * @param array $verbs
 	 * @param string $pattern
 	 * @param string $action
+	 * @param null | string $name
 	 * @return \PHPLegends\Routes\Route
 	 * */
 
-	public function addRoute(array $verbs, $pattern, $action)
+	public function addRoute(array $verbs, $pattern, $action, $name = null)
 	{
 
-		$pattern = trim($this->basePath . '/' . $pattern, '/');
+		$pattern = $this->resolvePatternValue($pattern);
+		
+		$action  = $this->resolveActionValue($action);
+		
+		$name    = $this->resolveNameValue($name);
+		
+		$route   = new Route($pattern, $action, $verbs, $name);
 
-		$newRoute = new Route($pattern, $action);
+		if ($filters = $this->getDefaultFilters()) {
 
-		$newRoute->setVerbs($verbs);
+			$route->setFilters($filters);
+		}
 
-		$this->routes->add($newRoute);
+		$this->routes->add($route);
 
-		return $newRoute;
+		return $route;
 	}
 
-	public function get($pattern, $action)
+	public function get($pattern, $action, $name = null)
 	{
-		return $this->addRoute(['GET', 'HEAD'], $pattern, $action);
+		return $this->addRoute(['GET', 'HEAD'], $pattern, $action, $name);
 	}
 
-	public function put($pattern, $action)
+	public function put($pattern, $action, $name = null)
 	{
-		return $this->addRoute(['PUT'], $pattern, $action);
+		return $this->addRoute(['PUT'], $pattern, $action, $name);
 	}
 
-	public function post($pattern, $action)
+	public function post($pattern, $action, $name = null)
 	{
-		return $this->addRoute(['POST'], $pattern, $action);
+		return $this->addRoute(['POST'], $pattern, $action, $name);
 	}
 
-	public function delete($pattern, $action)
+	public function delete($pattern, $action, $name = null)
 	{
-		return $this->addRoute(['DELETE'], $pattern, $action);
-	}
-
-	public function prefixes($prefix, \Closure $closure)
-	{
-		$newRouter = new static();
-
-		$newRouter->setBasepath($prefix);
-
-		$closure->call($newRouter);
-
-		$this->getCollection()->merge($newRouter->getCollection());
-
-		return $this;
+		return $this->addRoute(['DELETE'], $pattern, $action, $name);
 	}
 
 	public function getCollection()
@@ -155,4 +173,167 @@ class Router
 
 		return $filter;
 	}
+
+
+	public function group(array $options, \Closure $closure)
+	{
+		$group = new static(null, $options);
+
+		$closure->bindTo($group)->__invoke($group);
+
+		$this->getCollection()->addAll($group->getCollection());
+
+		return $this;
+
+	}
+
+    /**
+     * Gets the value of namespace.
+     *
+     * @return mixed
+     */
+    public function getNamespace()
+    {
+        return $this->namespace;
+    }
+
+    /**
+     * Sets the value of namespace.
+     *
+     * @param string $namespace the namespace
+     *
+     * @return self
+     */
+    public function setNamespace($namespace)
+    {
+        $this->namespace = $namespace;
+
+        return $this;
+    }
+
+
+    protected function resolveActionValue($action)
+    {
+    	if (is_string($action) && $namespace = $this->getNamespace()) {
+
+ 			return rtrim($namespace, '\\') . '\\' . $action;
+    	}
+
+    	return $action;
+    }
+
+    protected function resolvePatternValue($pattern)
+    {
+    	if ($prefix = $this->getPrefixPath()) {
+
+    		$pattern = $prefix . $pattern;
+    	}
+
+    	return $pattern === '' ? '/' : $pattern;
+    }
+
+    protected function resolveNameValue($name)
+    {
+    	if ($name === null) return null;
+
+    	if ($prefixName = $this->getPrefixName()) {
+
+    		$name = $prefixName . $name;
+    	}
+
+    	return $name;
+    }
+
+    /**
+     * Gets the value of prefixPath.
+     *
+     * @return mixed
+     */
+    public function getPrefixPath()
+    {
+        return $this->prefixPath;
+    }
+
+    /**
+     * Sets the value of prefixPath.
+     *
+     * @param string $prefixPath
+     *
+     * @return self
+     */
+    public function setPrefixPath($prefixPath)
+    {
+        $this->prefixPath = $prefixPath;
+
+        return $this;
+    }
+
+    /**
+     * Gets the value of prefixName.
+     *
+     * @return mixed
+     */
+    public function getPrefixName()
+    {
+        return $this->prefixName;
+    }
+
+    /**
+     * Sets the value of prefixName.
+     *
+     * @param string $prefixName
+     *
+     * @return self
+     */
+    public function setPrefixName($prefixName)
+    {
+        $this->prefixName = $prefixName;
+
+        return $this;
+    }
+
+    /**
+     * Gets the value of defaultFilters.
+     *
+     * @return mixed
+     */
+    public function getDefaultFilters()
+    {
+        return $this->defaultFilters;
+    }
+
+    /**
+     * Sets the value of defaultFilters.
+     *
+     * @param array|string $defaultFilters the default filters
+     *
+     * @return self
+     */
+    public function setDefaultFilters($defaultFilters)
+    {
+        $this->defaultFilters = (array) $defaultFilters;
+
+        return $this;
+    }
+
+    public function setOptions(array $args)
+    {
+
+    	$args += [
+			'filters'    => [],
+			'name'      => null,
+			'namespace' => null,
+			'prefix'    => null,
+    	];
+
+    	$args['namespace'] && $this->setNamespace($args['namespace']);
+    	
+    	$args['prefix'] && $this->setPrefixPath($args['prefix']);
+    	
+    	$args['name'] && $this->setPrefixName($args['name']);
+    	
+    	$args['filters'] && $this->setDefaultFilters($args['filters']);
+
+    	return $this;    
+    }
 }
