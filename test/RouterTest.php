@@ -115,4 +115,30 @@ class RouterTest extends PHPUnit_Framework_TestCase
 	{
 		return 'You are called RouteTest::_routeMethod()';
 	}
+
+
+
+	public function testGroup()
+	{
+		$this->router->group([
+			'name'   => 'in_group.',
+			'prefix' => 'in_group/',
+			'filters' => ['a', 'b']
+
+		], function () {
+
+			$this->get('create', function () {}, 'creator')->addFilter('c');
+
+			$this->delete('destroy', function () {}, 'destroyer');
+
+		});
+
+		$route = $this->router->findByUri('in_group/create');
+
+		$this->assertEquals('in_group/create', $route->getPattern());
+
+		$this->assertEquals('in_group.creator', $route->getName());
+
+		$this->assertEquals(['a', 'b', 'c'], $route->getFilters());
+	}
 }

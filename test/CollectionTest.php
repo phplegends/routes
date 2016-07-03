@@ -22,4 +22,20 @@ class CollectionTest extends PHPUnit_Framework_TestCase
 
 	public function routeMethod($one, $two) {
 	}
+
+
+	public function testMap()
+	{
+		$routes = new Collection();
+
+		$routes->add(new Route('a', function () {}));
+		$routes->add(new Route('b', function () {}));
+		$routes->add(new Route('c', function () {}));
+
+		$patterns = $routes->map(function ($r) {
+			return $r->getPattern();
+		});
+
+		$this->assertEquals($patterns->all(), ['a', 'b', 'c']);
+	}
 }
