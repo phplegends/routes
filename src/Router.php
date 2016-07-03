@@ -52,8 +52,7 @@ class Router
 
 	/**
 	 * 
-	 * 
-	 * @param \PHPLegends\Routes\Route | null $routes
+	 * @param \PHPLegends\Routes\Collection | null $routes
 	 * @param array $options
 	 * */
 	public function __construct(Collection $routes = null, array $options = [])
@@ -65,11 +64,11 @@ class Router
 		$options && $this->setOptions($options);
 	}
 
-
-
 	/**
+	 * Finds the route via uri
+	 * 
 	 * @param string $uri
-	 * @return Route | null
+	 * @return \PHPLegends\Routes\Route | null
 	 * */
 	public function findByUri($uri)
 	{	
@@ -80,11 +79,24 @@ class Router
 
 	}
 
+	/**
+	 * Dispatches the route via Dispatchable interface implementation
+	 * 
+	 * @param \PHPLegends\Routes\Dispatchable $dispatchable
+	 * 
+	 * */
 	public function dispatch(Dispatchable $dispatcher)
 	{
 		return $dispatcher->dispatch($this);
 	}
 
+	/**
+	 * 
+	 * 
+	 * @param string $uri
+	 * @param string $verb
+	 * @return \PHPLegends\Routes\Route | null
+	 * */
 	public function findByUriAndVerb($uri, $verb)
 	{
 		return $this->routes->first(function ($route) use ($uri, $verb) {
@@ -97,6 +109,7 @@ class Router
 	 * Returns route by given name
 	 * 
 	 * @param string $name
+	 * @return \PHPLegends\Routes\Route | null
 	*/
 	public function findByName($name)
 	{
@@ -112,10 +125,9 @@ class Router
 	 * @param array $verbs
 	 * @param string $pattern
 	 * @param string $action
-	 * @param null | string $name
+	 * @param null|string $name
 	 * @return \PHPLegends\Routes\Route
 	 * */
-
 	public function addRoute(array $verbs, $pattern, $action, $name = null)
 	{
 
@@ -137,36 +149,82 @@ class Router
 		return $route;
 	}
 
+	/**
+	 * Create new row and add in collection	
+	 * 
+	 * @param string $pattern
+	 * @param string|\Closure $action
+	 * @param string|null $name
+	 * */
 	public function get($pattern, $action, $name = null)
 	{
 		return $this->addRoute(['GET', 'HEAD'], $pattern, $action, $name);
 	}
 
+	/**
+	 * Create new row and add in collection	
+	 * 
+	 * @param string $pattern
+	 * @param string|\Closure $action
+	 * @param string|null $name
+	 * */
 	public function put($pattern, $action, $name = null)
 	{
 		return $this->addRoute(['PUT'], $pattern, $action, $name);
 	}
 
+	/**
+	 * Create new row and add in collection	
+	 * 
+	 * @param string $pattern
+	 * @param string|\Closure $action
+	 * @param string|null $name
+	 * */
 	public function post($pattern, $action, $name = null)
 	{
 		return $this->addRoute(['POST'], $pattern, $action, $name);
 	}
 
+	/**
+	 * Create new row and add in collection	
+	 * 
+	 * @param string $pattern
+	 * @param string|\Closure $action
+	 * @param string|null $name
+	 * */
 	public function delete($pattern, $action, $name = null)
 	{
 		return $this->addRoute(['DELETE'], $pattern, $action, $name);
 	}
 
+	/**
+	 * Gets the route collection
+	 * 
+	 * @return \PHPLegends\Routes\Collection
+	 * */
 	public function getCollection()
 	{
 		return $this->routes;
 	}
 
+	/**
+	 * Gets the filters
+	 * 
+	 * @return \PHPLegends\Routes\FilterCollection
+	 * */
 	public function getFilters()
 	{
 		return $this->filters;
 	}    
 
+	/**
+	 * Add filter
+	 * 
+	 * @param string $name
+	 * @param callable $callback
+	 * @return \PHPLegends\Routes\Filter
+	 * 
+	 * */
 	public function addFilter($name, callable $callback)
 	{
 		$filter = new Filter($name, $callback);
@@ -177,6 +235,12 @@ class Router
 	}
 
 
+	/**
+	 * Create a group with specific options
+	 * 
+	 * @param array $options
+	 * @param \Closure $closure
+	 * */
 	public function group(array $options, \Closure $closure)
 	{
 		$group = new static(null, $options);
@@ -192,7 +256,7 @@ class Router
     /**
      * Gets the value of namespace.
      *
-     * @return mixed
+     * @return string
      */
     public function getNamespace()
     {
@@ -234,6 +298,11 @@ class Router
     	return $pattern === '' ? '/' : $pattern;
     }
 
+    /**
+     * Result value of name
+     * 
+     * @return string|null
+     * */
     protected function resolveNameValue($name)
     {
     	if ($name === null) return null;
@@ -297,7 +366,7 @@ class Router
     /**
      * Gets the value of defaultFilters.
      *
-     * @return mixed
+     * @return array
      */
     public function getDefaultFilters()
     {
@@ -318,6 +387,12 @@ class Router
         return $this;
     }
 
+    /**
+     * Set value via array options
+     * 
+     * @param array $args
+     * @return self
+     * */
     public function setOptions(array $args)
     {
 
