@@ -10,11 +10,18 @@ class RouteTest extends PHPUnit_Framework_TestCase
 	{
 		$this->route = new Route('/home/{str}/{str}', 'RouteTest::_routeMethod', ['GET', 'HEAD']);
 
+		$this->route->setName('controller.route');
+
+		$this->route->addFilter('a', 'b', 'c');
+
 		$this->routeClosure = new Route('closure/{num}/{str?}', function ($a, $b = '__none__')
 		{ 
 			return "A|B = $a|$b"; 
 
 		}, ['POST']);
+
+
+		$this->routeClosure->addFilter(['x', 'y', 'z']);
 	}
 
 	public function testAllMethodsOfUriMatching()
@@ -64,5 +71,22 @@ class RouteTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('A|B = 5|title-of-post', $result());
 
 	}
+
+
+	public function testGetName()
+	{
+		$this->assertEquals('controller.route', $this->route->getName());
+
+		$this->assertEquals(null, $this->routeClosure->getName());
+	}
+
+
+	public function testGetFilters()
+	{
+		$this->assertEquals(['a', 'b', 'c'], $this->route->getFilters());
+
+		$this->assertEquals(['x', 'y', 'z'], $this->routeClosure->getFilters());
+	}
+
 	
 }
