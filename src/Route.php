@@ -12,17 +12,19 @@ class Route
 {
 
     /**
+     * 
      * @var string
      * */
     protected $verbs = ['*'];
 
     /**
+     * 
      * @var string
      * */
     protected $pattern;
 
     /**
-     * @var callable
+     * @var string|Closure
      **/
     protected $action;
 
@@ -311,8 +313,9 @@ class Route
     }
 
     /**
+     * Sets list of filters
      * 
-     * @param string[] $filters
+     * @param array $filters
      * @return self
      * */
     public function setFilters(array $filters)
@@ -323,6 +326,7 @@ class Route
     }
 
     /**
+     * Add filters
      * 
      * @param string|array $filter
      * @return self
