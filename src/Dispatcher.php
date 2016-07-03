@@ -62,9 +62,6 @@ class Dispatcher implements Dispatchable
 
 		if ($filterResult !== null) return $filterResult;
 
-		return call_user_func_array(
-			$route->getActionAsCallable(), $route->match($this->uri)
-		);
-
+		return $route->getResult($this->uri)->invoke();
 	}
 }
