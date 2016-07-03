@@ -4,6 +4,12 @@ namespace PHPLegends\Routes;
 use PHPLegends\Routes\Exceptions\NotFoundException;
 use PHPLegends\Routes\Exceptions\InvalidVerbException;
 
+/**
+ * Simple dispatcher using Dispatchable implementation
+ * 
+ * @author Wallace de Souza Vizerra
+ * 
+ * */
 class Dispatcher implements Dispatchable
 {	
 
