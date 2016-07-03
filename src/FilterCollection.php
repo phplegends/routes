@@ -6,6 +6,10 @@ use PHPLegends\Collections\Collection as BaseCollection;
 
 class FilterCollection extends BaseCollection
 {
+    /**
+     * 
+     * 
+     * */
 	public function add($filter)
 	{
 		if (! $filter instanceof Filter) {
@@ -18,6 +22,12 @@ class FilterCollection extends BaseCollection
 		return parent::add($filter);
 	}
 
+    /**
+     *  
+     * @param string $name
+     * @return FilterCollection
+     * 
+     * */
 	public function findByPrefix($name)
 	{
 		return $this->first(function ($filter) use($name)
@@ -57,5 +67,14 @@ class FilterCollection extends BaseCollection
 			}
 		}
 	}
+
+    /**
+     * 
+     * @return \PHPLegends\Collections\Collection
+     * */
+    public function toBase()
+    {
+        return new Collection($this->all());
+    }
 }
 
