@@ -67,7 +67,7 @@ class Filter
 
 	public function raiseExceptionIfNotNull()
 	{
-		$result = $this->__invoke();
+		$result = call_user_func_array($this, func_get_args());
 
 		if ($result === null) return;
 
