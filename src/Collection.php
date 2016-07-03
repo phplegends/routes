@@ -98,4 +98,21 @@ class Collection extends ListCollection
 			return $route->match($pattern) !== false;
 		};
 	}
+
+
+	/**
+	 * 
+	 * 
+	 * 
+	 * */
+	public function map(callable $callback = null)
+	{	
+		$items = array_map(
+            $callback,
+            $this->all(),
+            $keys = $this->keys()
+        );
+
+        return new ListCollection(array_combine($keys, $items));
+	}
 }
