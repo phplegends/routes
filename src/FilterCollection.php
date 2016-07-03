@@ -7,8 +7,10 @@ use PHPLegends\Collections\Collection as BaseCollection;
 class FilterCollection extends BaseCollection
 {
     /**
+     * Adds filter
      * 
-     * 
+     * @param string $filter
+     * @return self
      * */
 	public function add($filter)
 	{
@@ -28,9 +30,9 @@ class FilterCollection extends BaseCollection
      * @return FilterCollection
      * 
      * */
-	public function findByPrefix($name)
+	public function filterByPrefix($name)
 	{
-		return $this->first(function ($filter) use($name)
+		return $this->filter(function (Filter $filter) use ($name)
 		{
 			return strpos($filter->getName(), $name) === 0;
 		});
