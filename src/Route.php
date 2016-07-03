@@ -41,6 +41,10 @@ class Route
 
     const ANY_METHOD_WILDCARD = '*';
 
+    /**
+     * 
+     * @var array
+     * */
     protected $patternTranslations = [
         '*'      => '(.*?)',
         '{num}'  => '(\d+)',
@@ -59,15 +63,18 @@ class Route
      * @param string $pattern
      * @param string|Closure $action
      * @param array $verbs
+     * @param string|null $name
      * @return void
      * */
-    public function __construct($pattern, $action, array $verbs = ['*'])
+    public function __construct($pattern, $action, array $verbs = ['*'], $name = null)
     {
         $this->setPattern($pattern);
 
         $this->setVerbs($verbs);
 
         $this->setAction($action);
+
+        $name && $this->setName($name);
     }
 
     /**
@@ -183,6 +190,8 @@ class Route
     /**
      * Forces the action to be returns Closure
      * 
+     * @todo isso está funcionando?
+     * 
      * @return \Closure
      * */
     public function getActionAsClosure()
@@ -192,11 +201,9 @@ class Route
             return $this->action;
         }
 
-        $me = $this;
+        return function () {
 
-        return function () use ($me) {
-
-            $action = $me->getAction();
+            $action = $this->getActionAsCallable();
 
             return call_user_func_array($action, func_get_args());
         };
@@ -242,13 +249,31 @@ class Route
         return false;
     }
 
+    /**
+     * Sets the name of route
+     * 
+     * @param string $name
+     * @throws \InvalidArgumentException
+     * 
+     * */
     public function setName($name)
     {
-        $this->name = $name;
+        if (is_string($name) || $name === null) {
 
-        return $this;
+            $this->name = $name;
+
+            return $this;
+        }   
+        
+        throw new \InvalidArgumentException('Name of route must be string or null value');
+
     }
 
+    /**
+     * Gets the name of route
+     * 
+     * @return string
+     * */
     public function getName() 
     {
         return $this->name;
@@ -266,6 +291,28 @@ class Route
         return $this;
     }
 
+    /**
+     * 
+     * @param string|array $filter
+     * @return self
+     * */
+    public function addFilter($filters)
+    {
+
+        $filters = is_array($filters) ? $filters : func_get_args();
+
+        foreach ($filters as $filter) {
+            
+            $this->filters[] = $filter;
+        }
+
+        return $this;
+    }
+
+    /**
+     * 
+     * @return array
+     * */
     public function getFilters()
     {
         return $this->filters;
@@ -273,6 +320,7 @@ class Route
 
     /**
      * Check if route contains a filter
+     * 
      * @return boolean
      * */
     public function hasFilter($name)
