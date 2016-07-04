@@ -11,6 +11,7 @@ namespace PHPLegends\Routes;
 
 class Router
 {
+
 	/**
 	 * @var string
 	 *
@@ -310,7 +311,23 @@ class Router
      * */
     public function routable($class, $prefix = null)
     {
-        return (new RoutableInspector($class))->getRoutables($this, $prefix);
+        return (new RoutableInspector($class))->generateRoutables($this, $prefix);
+    }
+
+    /**
+     *
+     * @param string $class
+     * @param string|null $prefix
+     * */
+
+    public function crud($class, $prefix = null)
+    {
+        $inspector = new RoutableInspector($class);
+
+        $inspector->generateCrudRoutes($this, $prefix);
+
+        return $this;
+
     }
 
     /**
