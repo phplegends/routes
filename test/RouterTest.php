@@ -144,7 +144,7 @@ class RouterTest extends PHPUnit_Framework_TestCase
 
     public function testRoutable()
     {
-        $this->router->routable('RoutableClass');
+        $this->router->routable('Routable1', 'routable-class');
 
         $this->assertInstanceOf(
             'PHPLegends\Routes\Route',
@@ -160,20 +160,76 @@ class RouterTest extends PHPUnit_Framework_TestCase
             $this->router->findByUriAndVerb('routable-class/login', 'PUT')
         );
 
-        $this->router->routable('RoutableClass', 'routable-controller');
+        $this->router->routable('Routable1', 'routable-controller');
 
         $this->assertInstanceOf(
             'PHPLegends\Routes\Route',
             $this->router->findByUriAndVerb('routable-controller/login', 'GET')
         );
 
+        $this->assertInstanceOf(
+            'PHPLegends\Routes\Route',
+            $this->router->findByUriAndVerb('routable-class/test-arguments/one/two', 'GET')
+        );
+
+    }
+
+    public function testCrud()
+    {
+
+        // Resgistry method if exists
+
+        $this->router->crud('Routable2', 'crud');
+
+        $this->assertCount(
+            5,
+            $this->router->getCollection()->filterByPrefixName('crud')
+        );
+
     }
 }
 
 
-class RoutableClass {
+class Routable1 {
 
     public function actionLoginPost() {}
 
     public function actionLoginGet() {}
+
+    public function actionTestArgumentsGet($id, $name = null) {}
+
+    public function actionUpdateGet($id) {}
+}
+
+class Routable2 {
+
+    public function actionIndexGet()
+    {
+
+    }
+
+    public function actionCreateGet()
+    {
+
+    }
+
+    public function actionCreatePost()
+    {
+
+    }
+
+    public function actionUpdateGet($id)
+    {
+
+    }
+
+    public function actionUpdatePost($id)
+    {
+
+    }
+
+    /*public function actionDeleteDelete($id)
+    {
+
+    }*/
 }

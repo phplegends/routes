@@ -21,7 +21,7 @@ class RoutableInspectorTest extends PHPUnit_Framework_TestCase
 
     public function testGetRoutables()
     {
-        $routables = $this->inspector->getRoutables();
+        $routables = $this->inspector->generateRoutables();
 
         $this->assertCount(9, $routables->getCollection());
 
