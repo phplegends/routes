@@ -2,12 +2,11 @@
 
 namespace PHPLegends\Routes;
 
-
 /**
  * This class is a tool for easy way for create routes in collection
- * 
+ *
  * @author Wallace de Souza Vizerra <wallacemaxters@gmail.com>
- * 
+ *
  * */
 
 class Router
@@ -16,7 +15,7 @@ class Router
 	 * @var string
 	 *
 	 * */
-	protected $prefixPath = '';	
+	protected $prefixPath = '';
 
 	/**
 	 * @var \PHPLegends\Routes\RouteCollection
@@ -25,38 +24,38 @@ class Router
 	protected $routes;
 
 	/**
-	 * 
+	 *
 	 * @var PHPLegends\Routes\FilterCollection
 	 * */
 
 	protected $filters;
 
 	/**
-	 * 
+	 *
 	 * @var string
 	 * */
 	protected $namespace;
 
 	/**
-	 * 
+	 *
 	 * @var string
 	 * */
 	protected $prefixName;
 
 	/**
 	 * Default filters name for created route in collection
-	 * 
-	 * @var array 
+	 *
+	 * @var array
 	 * */
 	protected $defaultFilters = [];
 
 	/**
-	 * 
+	 *
 	 * @param \PHPLegends\Routes\Collection | null $routes
 	 * @param array $options
 	 * */
 	public function __construct(Collection $routes = null, array $options = [])
-	{	
+	{
 		$this->routes = $routes ?: new Collection;
 
 		$this->filters = new FilterCollection;
@@ -66,12 +65,12 @@ class Router
 
 	/**
 	 * Finds the route via uri
-	 * 
+	 *
 	 * @param string $uri
 	 * @return \PHPLegends\Routes\Route | null
 	 * */
 	public function findByUri($uri)
-	{	
+	{
 		return $this->routes->first(function ($route) use($uri) {
 
 			return $route->isValid($uri);
@@ -81,9 +80,9 @@ class Router
 
 	/**
 	 * Dispatches the route via Dispatchable interface implementation
-	 * 
+	 *
 	 * @param \PHPLegends\Routes\Dispatchable $dispatchable
-	 * 
+	 *
 	 * */
 	public function dispatch(Dispatchable $dispatcher)
 	{
@@ -91,8 +90,8 @@ class Router
 	}
 
 	/**
-	 * 
-	 * 
+	 *
+	 *
 	 * @param string $uri
 	 * @param string $verb
 	 * @return \PHPLegends\Routes\Route | null
@@ -107,7 +106,7 @@ class Router
 
 	/**
 	 * Returns route by given name
-	 * 
+	 *
 	 * @param string $name
 	 * @return \PHPLegends\Routes\Route | null
 	*/
@@ -121,7 +120,7 @@ class Router
 
 	/**
 	 * Create a new route instance and attach to Collection
-	 * 
+	 *
 	 * @param array $verbs
 	 * @param string $pattern
 	 * @param string $action
@@ -132,11 +131,11 @@ class Router
 	{
 
 		$pattern = $this->resolvePatternValue($pattern);
-		
+
 		$action  = $this->resolveActionValue($action);
-		
+
 		$name    = $this->resolveNameValue($name);
-		
+
 		$route   = new Route($pattern, $action, $verbs, $name);
 
 		if ($filters = $this->getDefaultFilters()) {
@@ -150,8 +149,8 @@ class Router
 	}
 
 	/**
-	 * Create new row and add in collection	
-	 * 
+	 * Create new row and add in collection
+	 *
 	 * @param string $pattern
 	 * @param string|\Closure $action
 	 * @param string|null $name
@@ -162,8 +161,8 @@ class Router
 	}
 
 	/**
-	 * Create new row and add in collection	
-	 * 
+	 * Create new row and add in collection
+	 *
 	 * @param string $pattern
 	 * @param string|\Closure $action
 	 * @param string|null $name
@@ -174,8 +173,8 @@ class Router
 	}
 
 	/**
-	 * Create new row and add in collection	
-	 * 
+	 * Create new row and add in collection
+	 *
 	 * @param string $pattern
 	 * @param string|\Closure $action
 	 * @param string|null $name
@@ -186,8 +185,8 @@ class Router
 	}
 
 	/**
-	 * Create new row and add in collection	
-	 * 
+	 * Create new row and add in collection
+	 *
 	 * @param string $pattern
 	 * @param string|\Closure $action
 	 * @param string|null $name
@@ -197,9 +196,59 @@ class Router
 		return $this->addRoute(['DELETE'], $pattern, $action, $name);
 	}
 
+    /**
+     * Create new row and add in collection
+     *
+     * @param string $pattern
+     * @param string|\Closure $action
+     * @param string|null $name
+     * */
+
+    public function trace($pattern, $action, $name =  null)
+    {
+        return $this->addRoute(['TRACE'], $pattern, $action, $name);
+    }
+
+    /**
+     * Create new row and add in collection
+     *
+     * @param string $pattern
+     * @param string|\Closure $action
+     * @param string|null $name
+     * */
+
+    public function any($pattern, $action, $name =  null)
+    {
+        return $this->addRoute(['*'], $pattern, $action, $name);
+    }
+
+    /**
+     * Create new row and add in collection
+     *
+     * @param string $pattern
+     * @param string|\Closure $action
+     * @param string|null $name
+     * */
+    public function options($pattern, $action, $name = null)
+    {
+        return $this->addRoute(['OPTIONS'], $pattern, $action, $name);
+    }
+
+    /**
+     * Create new row and add in collection
+     *
+     * @param string $pattern
+     * @param string|\Closure $action
+     * @param string|null $name
+     * */
+    public function head($pattern, $action, $name = null)
+    {
+        return $this->addRoute(['HEAD'], $pattern, $action, $name);
+    }
+
 	/**
 	 * Gets the route collection
-	 * 
+	 *
 	 * @return \PHPLegends\Routes\Collection
 	 * */
 	public function getCollection()
@@ -209,21 +258,21 @@ class Router
 
 	/**
 	 * Gets the filters
-	 * 
+	 *
 	 * @return \PHPLegends\Routes\FilterCollection
 	 * */
 	public function getFilters()
 	{
 		return $this->filters;
-	}    
+	}
 
 	/**
 	 * Add filter
-	 * 
+	 *
 	 * @param string $name
 	 * @param callable $callback
 	 * @return \PHPLegends\Routes\Filter
-	 * 
+	 *
 	 * */
 	public function addFilter($name, callable $callback)
 	{
@@ -237,7 +286,7 @@ class Router
 
 	/**
 	 * Create a group with specific options
-	 * 
+	 *
 	 * @param array $options
 	 * @param \Closure $closure
 	 * */
@@ -252,6 +301,17 @@ class Router
 		return $this;
 
 	}
+
+    /**
+     * Import all routable method for a class
+     *
+     * @param string $class
+     * @return self
+     * */
+    public function routable($class, $prefix = null)
+    {
+        return (new RoutableInspector($class))->getRoutables($this, $prefix);
+    }
 
     /**
      * Gets the value of namespace.
@@ -300,7 +360,7 @@ class Router
 
     /**
      * Result value of name
-     * 
+     *
      * @return string|null
      * */
     protected function resolveNameValue($name)
@@ -389,7 +449,7 @@ class Router
 
     /**
      * Set value via array options
-     * 
+     *
      * @param array $args
      * @return self
      * */
@@ -404,13 +464,15 @@ class Router
     	];
 
     	$args['namespace'] && $this->setNamespace($args['namespace']);
-    	
+
     	$args['prefix'] && $this->setPrefixPath($args['prefix']);
-    	
+
     	$args['name'] && $this->setPrefixName($args['name']);
-    	
+
     	$args['filters'] && $this->setDefaultFilters($args['filters']);
 
-    	return $this;    
+    	return $this;
     }
+
+
 }
