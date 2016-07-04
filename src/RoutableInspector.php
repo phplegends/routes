@@ -23,9 +23,9 @@ class RoutableInspector
         'actionIndexGet'     => 'index',
         'actionCreateGet'    => 'create',
         'actionCreatePost'   => 'create',
-        'actionDeleteDelete' => 'delete/{num}',
-        'actionUpdateGet'    => 'update/{num}',
-        'actionUpdatePost'   => 'update/{num}',
+        'actionDeleteDelete' => 'delete/{str}',
+        'actionUpdateGet'    => 'update/{str}',
+        'actionUpdatePost'   => 'update/{str}',
     ];
 
     /**
