@@ -13,7 +13,7 @@ $router->get('/', function () {
 
 $page = isset($_GET['page']) ? $_GET['page'] : '/';
 
-$dispatcher = new Dispatcher($page, $_SERVER['REQUEST_METHOD']);
+$dispatcher = new \PHPLegends\Routes\Dispatcher($page, $_SERVER['REQUEST_METHOD']);
 
 $router->dispatcher($dispacher);
 ```
