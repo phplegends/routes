@@ -6,145 +6,174 @@ use PHPLegends\Routes\Router;
 
 class RouterTest extends PHPUnit_Framework_TestCase
 {
-	public function setUp()
-	{
-		$this->router = new Router;
+    public function setUp()
+    {
+        $this->router = new Router;
 
-		$this->router->get('/', 'RouterTest::_routeMethod')->setFilters(['before.age']);
+        $this->router->get('/', 'RouterTest::_routeMethod')->setFilters(['before.age']);
 
-		$this->router->get('/dispatcher', function ()
-		{
-			return 'Test dispatch completeded';
-		});
+        $this->router->get('/dispatcher', function ()
+        {
+            return 'Test dispatch completeded';
+        });
 
-		$this->router->addFilter('before.age', function ($route, $age = null)
-		{	
-			if ($age < 18) return 'Age not accepted';
-		});
-	}
+        $this->router->addFilter('before.age', function ($route, $age = null)
+        {
+            if ($age < 18) return 'Age not accepted';
+        });
+    }
 
-	public function testAddRoute()
-	{	
-		// Internaly call addRoute
+    public function testAddRoute()
+    {
+        // Internaly call addRoute
 
-		$this->router->get('/home/{str}/{str}', 'RouterTest::_routeMethod');
+        $this->router->get('/home/{str}/{str}', 'RouterTest::_routeMethod');
 
-		$r = $this->router->findByUri('home/one/two');
+        $r = $this->router->findByUri('home/one/two');
 
-		$this->assertInstanceOf('PHPLegends\Routes\Route', $r);
-	}
+        $this->assertInstanceOf('PHPLegends\Routes\Route', $r);
+    }
 
-	public function testFilter()
-	{
-		$this->router->addFilter('before.auth', function ($route, $auth = false)
-		{
-			if ($auth === false)
-			{
-				return 'Loggin, please';
-			}
-		});	
+    public function testFilter()
+    {
+        $this->router->addFilter('before.auth', function ($route, $auth = false)
+        {
+            if ($auth === false)
+            {
+                return 'Loggin, please';
+            }
+        });
 
-		$this->assertInstanceOf(
-			'PHPLegends\Routes\FilterCollection', $this->router->getFilters()
-		);
+        $this->assertInstanceOf(
+            'PHPLegends\Routes\FilterCollection', $this->router->getFilters()
+        );
 
-		$this->assertCount(2, $this->router->getFilters());
+        $this->assertCount(2, $this->router->getFilters());
 
-	}
+    }
 
-	public function testCallFilters()
-	{
-		$routeIndex = $this->router->findByUri('/');
+    public function testCallFilters()
+    {
+        $routeIndex = $this->router->findByUri('/');
 
-		$result[0] = $this->router->getFilters()->processRouteFilters($routeIndex, 15);
+        $result[0] = $this->router->getFilters()->processRouteFilters($routeIndex, 15);
 
-		$result[1] = $this->router->getFilters()->processRouteFilters($routeIndex, 18);
+        $result[1] = $this->router->getFilters()->processRouteFilters($routeIndex, 18);
 
-		$this->assertNotNull($result[0]);
+        $this->assertNotNull($result[0]);
 
-		$this->assertNull($result[1]);
+        $this->assertNull($result[1]);
 
-		$this->assertEquals('Age not accepted', $result[0]);
-	}
+        $this->assertEquals('Age not accepted', $result[0]);
+    }
 
-	public function testDispatcher()
-	{	
-		
-		$dispatcher = new PHPLegends\Routes\Dispatcher('dispatcher', 'GET');
+    public function testDispatcher()
+    {
 
-		$response = $this->router->dispatch($dispatcher);
+        $dispatcher = new PHPLegends\Routes\Dispatcher('dispatcher', 'GET');
 
-		$this->assertEquals('Test dispatch completeded', $response);
+        $response = $this->router->dispatch($dispatcher);
 
-	}
+        $this->assertEquals('Test dispatch completeded', $response);
 
-	public function testInvalidVerbExceptionInDispatcher()
-	{
+    }
 
-		$dispatcher = new PHPLegends\Routes\Dispatcher('dispatcher', 'POST');
+    public function testInvalidVerbExceptionInDispatcher()
+    {
 
-		try {
+        $dispatcher = new PHPLegends\Routes\Dispatcher('dispatcher', 'POST');
 
-			$response = $this->router->dispatch($dispatcher);
+        try {
 
-		} catch (\Exception $e) {
+            $response = $this->router->dispatch($dispatcher);
 
-			$this->assertInstanceOf('PHPLegends\Routes\Exceptions\InvalidVerbException', $e);
+        } catch (\Exception $e) {
 
-		}
+            $this->assertInstanceOf('PHPLegends\Routes\Exceptions\InvalidVerbException', $e);
 
-	}
+        }
 
-	public function testNotfoundExceptionInDispatcher()
-	{
+    }
 
-		$dispatcher = new PHPLegends\Routes\Dispatcher('non-exists-route', 'GET');
+    public function testNotfoundExceptionInDispatcher()
+    {
 
-		try {
+        $dispatcher = new PHPLegends\Routes\Dispatcher('non-exists-route', 'GET');
 
-			$response = $this->router->dispatch($dispatcher);
+        try {
 
-		} catch (\Exception $e) {
+            $response = $this->router->dispatch($dispatcher);
 
-			$this->assertInstanceOf('PHPLegends\Routes\Exceptions\NotFoundException', $e);
+        } catch (\Exception $e) {
 
-		}
-	}
+            $this->assertInstanceOf('PHPLegends\Routes\Exceptions\NotFoundException', $e);
 
-	public function _routeMethod($one = null, $two = null)
-	{
-		return 'You are called RouteTest::_routeMethod()';
-	}
+        }
+    }
+
+    public function _routeMethod($one = null, $two = null)
+    {
+        return 'You are called RouteTest::_routeMethod()';
+    }
+
+    public function testGroup()
+    {
+        $this->router->group([
+            'name'   => 'in_group.',
+            'prefix' => 'in_group/',
+            'filters' => ['a', 'b']
+
+        ], function () {
+
+            $this->get('create', function () {}, 'creator')->addFilter('c');
+
+            $this->delete('destroy', function () {}, 'destroyer');
+
+        });
+
+        $route = $this->router->findByUri('in_group/create');
+
+        $this->assertEquals('in_group/create', $route->getPattern());
+
+        $this->assertEquals('in_group.creator', $route->getName());
+
+        $this->assertEquals(['a', 'b', 'c'], $route->getFilters());
+
+        $this->assertCount(2, $this->router->getCollection()->filterByPrefixName('in_group'));
+    }
+
+    public function testRoutable()
+    {
+        $this->router->routable('RoutableClass');
+
+        $this->assertInstanceOf(
+            'PHPLegends\Routes\Route',
+            $this->router->findByUriAndVerb('routable-class/login', 'GET')
+        );
+
+        $this->assertInstanceOf(
+            'PHPLegends\Routes\Route',
+            $this->router->findByUriAndVerb('routable-class/login', 'POST')
+        );
+
+        $this->assertNull(
+            $this->router->findByUriAndVerb('routable-class/login', 'PUT')
+        );
+
+        $this->router->routable('RoutableClass', 'routable-controller');
+
+        $this->assertInstanceOf(
+            'PHPLegends\Routes\Route',
+            $this->router->findByUriAndVerb('routable-controller/login', 'GET')
+        );
+
+    }
+}
 
 
+class RoutableClass {
 
-	public function testGroup()
-	{
-		$this->router->group([
-			'name'   => 'in_group.',
-			'prefix' => 'in_group/',
-			'filters' => ['a', 'b']
+    public function actionLoginPost() {}
 
-		], function () {
-
-			$this->get('create', function () {}, 'creator')->addFilter('c');
-
-			$this->delete('destroy', function () {}, 'destroyer');
-
-		});
-
-		$route = $this->router->findByUri('in_group/create');
-
-		$this->assertEquals('in_group/create', $route->getPattern());
-
-		$this->assertEquals('in_group.creator', $route->getName());
-
-		$this->assertEquals(['a', 'b', 'c'], $route->getFilters());
-
-		$this->assertCount(2, $this->router->getCollection()->filterByPrefixName('in_group'));
-
-	}
-
-
-
+    public function actionLoginGet() {}
 }
