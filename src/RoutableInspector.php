@@ -3,7 +3,7 @@
 namespace PHPLegends\Routes;
 
 /**
- *  Inspector for routable class
+ *  this for routable class
  *
  *  @author Wallace de Souza Vizerra <wallacemaxters@gmail.com>
  * */
@@ -19,6 +19,15 @@ class RoutableInspector
      * */
     protected $methodRule = '/^action([A-Z][0-9A-Za-z]+)(Get|Post|Put|Head|Options|Trace|Delete|Any)$/';
 
+    protected $crudableList = [
+        'actionIndexGet'     => 'index',
+        'actionCreateGet'    => 'create',
+        'actionCreatePost'   => 'create',
+        'actionDeleteDelete' => 'delete/{num}',
+        'actionUpdateGet'    => 'update/{num}',
+        'actionUpdatePost'   => 'update/{num}',
+    ];
+
     /**
      *
      * @param string|object $target
@@ -26,17 +35,6 @@ class RoutableInspector
     public function __construct($target)
     {
         $this->setClass($target);
-    }
-
-    /**
-     * Gets the data of Method
-     * @return false | array
-     * */
-    public function getMethodData($method)
-    {
-        preg_match($this->methodRule, $method, $matches);
-
-        return empty($matches) ? false : array_slice($matches, 1);
     }
 
     /**
@@ -80,26 +78,30 @@ class RoutableInspector
      * @param \PHPLegends\Routes\Router|null $router
      * @return \PHPLegends\Routers\Router
      * */
-    public function getRoutables(Router $router = null, $prefix = null)
+    public function generateRoutables(Router $router = null, $prefix = null)
     {
         $router ?: $router = new Router;
 
-        $class = $this->getClass();
-
-        $prefix ?: $prefix = $this->buildUriPrefix($class);
+        $prefix ?: $prefix = $this->buildUriPrefix($this->reflection->name);
 
         foreach ($this->getRoutableReflectionMethodList() as $reflection) {
 
-            list($part, $method) = $data = $this->getMethodData($name = $reflection->getName());
-
-            $uri = $this->buildUriMethodFromMethodPart($part, $prefix);
-
-            $action = $class . '::' . $name;
-
-            $router->$method($uri, $action);
+            $this->addRouteFromMethod($router, $reflection->getName(), $prefix);
         }
 
         return $router;
+    }
+
+
+    protected function addRouteFromMethod(Router $router, $methodName, $prefix)
+    {
+        $verb = $this->getMethodVerb($methodName);
+
+        $uri = $this->buildUriFromMethod($methodName, $prefix);
+
+        $action = $this->reflection->name . '::' . $methodName;
+
+        return $router->$verb($uri, $action);
     }
 
     /**
@@ -124,14 +126,13 @@ class RoutableInspector
 
             $this->setReflection(new \ReflectionClass($class));
 
-        } else {
-
-            throw new \InvalidArgumentException(
-                'The value of setClass must be class name or object'
-            );
+            return $this;
         }
 
-        return $this;
+        throw new \InvalidArgumentException(
+            'The value of setClass must be class name or object'
+        );
+
     }
 
     /**
@@ -158,24 +159,108 @@ class RoutableInspector
         return $this->reflection;
     }
 
-    protected function buildUriMethodFromMethodPart($part, $controller = null)
+    protected function buildUriFromMethod($method, $prefix = null)
     {
-        $action = $this->camelCaseToHifen($part);
+        $action = $this->camelCaseToHifen(
+            $this->getMethodWithoutActionAndVerb($method)
+        );
 
         $action === 'index' && $action = '';
 
-        return $controller . '/' . $action;
+        foreach ($this->getReflection()->getMethod($method)->getParameters() as $parameter)
+        {
+            $action .= $parameter->isOptional() ? '/{str?}' : '/{str}';
+        }
+
+        return rtrim($prefix, '/') . '/' . $action;
+
     }
 
-    protected function buildUriPrefix($controller)
+    public function buildUriPrefix($controller)
     {
         return $this->camelCaseToHifen(
             preg_replace('/Controller$/', '', $controller)
         );
     }
 
+    /**
+     *
+     * @param string $method
+     * @throws \InvalidArgumentException
+     * @return string
+     * */
+    public function buildPossibleActionName($method)
+    {
+        if (! $this->isValidMethod($method)) {
+
+            throw new \InvalidArgumentException('Invalid routable method name');
+        }
+
+        return $this->getClass() . '::' . $method;
+    }
+
+    public function generateCrudRoutes(Router $router = null, $prefix = null)
+    {
+        $router ?: $router = new Router;
+
+        $controller = $this->reflection->name;
+
+        $prefix ?: $prefix = $this->buildUriPrefix($controller);
+
+        foreach  ($this->crudableList as $method => $uri) {
+
+            if (method_exists($controller, $method) && $this->isValidMethod($method)) {
+
+                $name = $this->buildCrudName($method, $prefix);
+
+                $verb = $this->getMethodVerb($method);
+
+                $router->$verb($prefix . '/' . $uri, $this->buildPossibleActionName($method), $name);
+            }
+
+        }
+
+        return $router;
+    }
+
+    protected function buildCrudName($method, $prefix)
+    {
+        $verb = strtolower($this->getMethodVerb($method));
+
+        $name = strtolower($this->getMethodWithoutActionAndVerb($method));
+
+        if ($verb === 'get') {
+
+            return $prefix . '.' . $name;
+        }
+
+        return $prefix . '.' . $verb . '.' . $name;
+
+    }
+
     protected function camelCaseToHifen($camel)
     {
         return ltrim(strtolower(preg_replace('/[A-Z]/', '-$0', $camel)), '-');
+    }
+
+    /**
+     * Gets the data of Method
+     * @return false | array
+     * */
+    protected function getMethodPartAndVerb($method)
+    {
+        preg_match($this->methodRule, $method, $matches);
+
+        return empty($matches) ? false : array_slice($matches, 1);
+    }
+
+    protected function getMethodVerb($method)
+    {
+        return strtoupper(preg_replace($this->methodRule, '$2', $method));
+    }
+
+    protected function getMethodWithoutActionAndVerb($method)
+    {
+        return preg_replace($this->methodRule, '$1', $method);
     }
 }
