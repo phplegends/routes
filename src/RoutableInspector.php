@@ -82,7 +82,7 @@ class RoutableInspector
     {
         $router ?: $router = new Router;
 
-        $prefix ?: $prefix = $this->buildUriPrefix($this->reflection->name);
+        $prefix ?: $prefix = $this->buildUriPrefix($this->reflection->getShortName());
 
         foreach ($this->getRoutableReflectionMethodList() as $reflection) {
 
@@ -178,6 +178,7 @@ class RoutableInspector
 
     public function buildUriPrefix($controller)
     {
+
         return $this->camelCaseToHifen(
             preg_replace('/Controller$/', '', $controller)
         );
@@ -203,13 +204,16 @@ class RoutableInspector
     {
         $router ?: $router = new Router;
 
-        $controller = $this->reflection->name;
+        if ($prefix === null) {
 
-        $prefix ?: $prefix = $this->buildUriPrefix($controller);
+            $prefix = $this->buildUriPrefix(
+                $this->reflection->getShortName()
+            );
+        }
 
         foreach  ($this->crudableList as $method => $uri) {
 
-            if (method_exists($controller, $method) && $this->isValidMethod($method)) {
+            if (method_exists($this->reflection->name, $method) && $this->isValidMethod($method)) {
 
                 $name = $this->buildCrudName($method, $prefix);
 
@@ -245,7 +249,9 @@ class RoutableInspector
 
     /**
      * Gets the data of Method
-     * @return false | array
+     * 
+     * @param string $method
+     * @return false|array
      * */
     protected function getMethodPartAndVerb($method)
     {
@@ -254,11 +260,21 @@ class RoutableInspector
         return empty($matches) ? false : array_slice($matches, 1);
     }
 
+    /**
+     * 
+     * @param string $method
+     * @return string
+     * */
     protected function getMethodVerb($method)
     {
         return strtoupper(preg_replace($this->methodRule, '$2', $method));
     }
 
+    /**
+     * 
+     * @param string $method
+     * @return string
+     * */
     protected function getMethodWithoutActionAndVerb($method)
     {
         return preg_replace($this->methodRule, '$1', $method);
