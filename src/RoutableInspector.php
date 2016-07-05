@@ -3,7 +3,7 @@
 namespace PHPLegends\Routes;
 
 /**
- *  this for routable class
+ *  Inspector for routable class
  *
  *  @author Wallace de Souza Vizerra <wallacemaxters@gmail.com>
  * */
