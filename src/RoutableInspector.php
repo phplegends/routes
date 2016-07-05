@@ -130,7 +130,7 @@ class RoutableInspector
         }
 
         throw new \InvalidArgumentException(
-            'The value of setClass must be class name or object'
+            "Class '$class' doesn't not exists"
         );
 
     }

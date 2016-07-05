@@ -76,7 +76,6 @@ class Router
 
 			return $route->isValid($uri);
 		});
-
 	}
 
 	/**
@@ -311,7 +310,13 @@ class Router
      * */
     public function routable($class, $prefix = null)
     {
-        return (new RoutableInspector($class))->generateRoutables($this, $prefix);
+        $class = $this->resolveRoutableClassValue($class);
+
+        $router = (new RoutableInspector($class))->generateRoutables(null, $prefix);
+
+        $this->mergeRouter($router);
+
+        return $this;
     }
 
     /**
@@ -322,9 +327,13 @@ class Router
 
     public function crud($class, $prefix = null)
     {
+        $router = new static();
+
         $inspector = new RoutableInspector($class);
 
-        $inspector->generateCrudRoutes($this, $prefix);
+        $router = $inspector->generateCrudRoutes(null, $prefix);
+
+        $this->mergeRouter($router);
 
         return $this;
 
@@ -357,9 +366,9 @@ class Router
 
     protected function resolveActionValue($action)
     {
-    	if (is_string($action) && $namespace = $this->getNamespace()) {
+    	if (is_string($action) && $ns = $this->getNamespace()) {
 
- 			return rtrim($namespace, '\\') . '\\' . $action;
+ 			return rtrim($ns, '\\') . '\\' . $action;
     	}
 
     	return $action;
@@ -378,6 +387,7 @@ class Router
     /**
      * Result value of name
      *
+     * @param string|null $name
      * @return string|null
      * */
     protected function resolveNameValue($name)
@@ -390,6 +400,16 @@ class Router
     	}
 
     	return $name;
+    }
+
+    protected function resolveRoutableClassValue($class)
+    {
+        if (($ns = $this->getNamespace()) && strpos($class, '\\') !== 0) {
+
+            $class = $ns . '\\' . $class;
+        }
+
+        return $class;
     }
 
     /**
@@ -473,7 +493,7 @@ class Router
     public function setOptions(array $args)
     {
 
-    	$args += [
+    	$this->options = $args += [
 			'filters'    => [],
 			'name'      => null,
 			'namespace' => null,
@@ -489,6 +509,16 @@ class Router
     	$args['filters'] && $this->setDefaultFilters($args['filters']);
 
     	return $this;
+    }
+
+    protected function mergeCollections(Collection $collection)
+    {
+        $this->getCollection()->addAll($collection);
+    }
+
+    protected function mergeRouter(Router $router)
+    {
+        $this->mergeCollections($router->getCollection());
     }
 
 

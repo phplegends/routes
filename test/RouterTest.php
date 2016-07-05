@@ -138,6 +138,7 @@ class RouterTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(['a', 'b', 'c'], $route->getFilters());
 
         $this->assertCount(2, $this->router->getCollection()->filterByPrefixName('in_group'));
+
     }
 
     public function testRoutable()
@@ -186,15 +187,16 @@ class RouterTest extends PHPUnit_Framework_TestCase
 
     }
 
-    public function testGenerateRoutablesInNamespace()
+    public function testGroupRoutableClassNameResolution()
     {
-        $this->router->routable('Routes\\RoutableTarget');
-
-        $list = $this->router->getCollection()->filter(function ($route) {
-
-            return strpos($route->getPattern(), 'routable-target');
+        $this->router->group(['namespace' => 'Routes'], function ($router)
+        {
+            $router->routable('RoutableTarget', 'r-routable-target');
         });
 
-        var_dump($list);
+        $route = $this->router->findByUriAndVerb('r-routable-target/page-contact', 'GET');
+
+        $this->assertEquals(['GET', 'HEAD'], $route->getVerbs());
     }
+
 }
