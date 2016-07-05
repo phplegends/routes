@@ -1,8 +1,6 @@
 <?php
 
-
 use PHPLegends\Routes\Router;
-
 
 class RouterTest extends PHPUnit_Framework_TestCase
 {
@@ -187,49 +185,16 @@ class RouterTest extends PHPUnit_Framework_TestCase
         );
 
     }
-}
 
-
-class Routable1 {
-
-    public function actionLoginPost() {}
-
-    public function actionLoginGet() {}
-
-    public function actionTestArgumentsGet($id, $name = null) {}
-
-    public function actionUpdateGet($id) {}
-}
-
-class Routable2 {
-
-    public function actionIndexGet()
+    public function testGenerateRoutablesInNamespace()
     {
+        $this->router->routable('Routes\\RoutableTarget');
 
+        $list = $this->router->getCollection()->filter(function ($route) {
+
+            return strpos($route->getPattern(), 'routable-target');
+        });
+
+        var_dump($list);
     }
-
-    public function actionCreateGet()
-    {
-
-    }
-
-    public function actionCreatePost()
-    {
-
-    }
-
-    public function actionUpdateGet($id)
-    {
-
-    }
-
-    public function actionUpdatePost($id)
-    {
-
-    }
-
-    /*public function actionDeleteDelete($id)
-    {
-
-    }*/
 }

@@ -6,12 +6,12 @@ class RoutableInspectorTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        $this->inspector = new RoutableInspector('RoutableTarget');
+        $this->inspector = new RoutableInspector('Routes\RoutableTarget');
     }
 
     public function testGetClass()
     {
-        $this->assertEquals('RoutableTarget', $this->inspector->getClass());
+        $this->assertEquals('Routes\RoutableTarget', $this->inspector->getClass());
     }
 
     public function testGetReflection()
@@ -37,22 +37,4 @@ class RoutableInspectorTest extends PHPUnit_Framework_TestCase
     }
 }
 
-
-class RoutableTarget
-{
-    public function actionIndexAny() {}
-    public function actionIndexDelete() {}
-    public function actionIndexGet() {}
-    public function actionIndexHead() {}
-    public function actionIndexOptions() {}
-    public function actionIndexPost() {}
-    public function actionIndexPut() {}
-    public function actionPageContactGet() {}
-    public function actionIndexTrace() {}
-
-    public function invalidMethod() {}
-
-    public function anotherInvalidRoutableMethod() {}
-
-}
 
