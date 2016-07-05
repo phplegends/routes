@@ -16,9 +16,13 @@
     },
 
     "autoload" : {
-
         "psr-4" : {
             "PHPLegends\\Routes\\" :  "src"
+        }
+    },
+    "autoload-dev" : {
+        "psr-4" : {
+            ""  : "test"
         }
     }
 }
