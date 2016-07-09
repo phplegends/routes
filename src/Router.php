@@ -520,6 +520,4 @@ class Router
     {
         $this->mergeCollections($router->getCollection());
     }
-
-
 }
