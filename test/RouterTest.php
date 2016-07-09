@@ -87,7 +87,7 @@ class RouterTest extends PHPUnit_Framework_TestCase
 
         } catch (\Exception $e) {
 
-            $this->assertInstanceOf('PHPLegends\Routes\Exceptions\InvalidVerbException', $e);
+            $this->assertInstanceOf('\PHPLegends\Routes\Exceptions\InvalidVerbException', $e);
 
         }
 

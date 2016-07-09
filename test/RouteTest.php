@@ -121,5 +121,55 @@ class RouteTest extends PHPUnit_Framework_TestCase
 		
 	}
 
+	public function testToUri()
+	{
+		$fn = function() {};
+
+		$r1 = new Route('/home/{str}/{num}', $fn);
+
+		$r2 = new Route('/home/{str}/{num?}', $fn);
+
+		$r3 = new Route('/home/{str}/{str}', $fn);
+
+		$r4 = new Route('/home/', $fn);
+
+		$r5 = new Route('/home/{str?}', $fn);
+
+		$r6 = new Route('/home/{date?}', $fn);
+
+		$r7 = new Route('/home/{date}', $fn);
+
+		$this->assertEquals(
+			'/home/segment-string/3',
+			$r1->toUri(['segment-string', '3'])
+		);
+
+		$this->assertEquals('/home/2', $r2->toUri([2]));
+
+		$this->assertEquals('/home/cat/4', $r2->toUri(['cat', 4]));
+
+		$this->assertEquals('/home/2/1', $r3->toUri([2, 1]));
+
+		$this->assertEquals('/home', $r4->toUri([2, 1]));
+
+		$this->assertEquals('/home', $r5->toUri([null]));
+
+		$this->assertEquals('/home', $r5->toUri());
+
+		$this->assertEquals('/home/contact', $r5->toUri(['contact']));
+
+		$this->assertEquals('/home', $r6->toUri());
+
+		$this->assertEquals('/home/2016/07/02', $r6->toUri(['2016/07/02']));
+
+		try {
+
+			$this->assertEquals('/home', $r7->toUri());
+
+		} catch (\Exception $e) {
+
+			$this->assertInstanceOf('UnexpectedValueException', $e);
+		}	
+	}
 
 }
