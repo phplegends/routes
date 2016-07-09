@@ -47,13 +47,10 @@ class Route
      * @var array
      * */
     protected $patternTranslations = [
-        '*'       => '(.*?)',
         '{num}'   => '(\d+)',
         '{num?}'  => '?(\d+)?',
-        '{str}'   => '([a-z0-9-_]+)',
-        '{str?}'  => '?([a-z0-9-_]+)?',
-        '/'       => '\/',
-        '\\'      => '\\\\',
+        '{str}'   => '([A-Za-z0-9-_]+)',
+        '{str?}'  => '?([A-Za-z0-9-_]+)?',
         '{date}'  => '(\d{4}\/\d{2}\/\d{2})',
         '{date?}' => '?(\d{4}\/\d{2}\/\d{2})?'
     ];
@@ -210,9 +207,35 @@ class Route
         };
     }
 
+
+    /**
+     * Gets the name of action
+     * 
+     * @return string
+     * */
+
+    public function getActionName()
+    {
+        if ($this->action instanceof \Closure) {
+
+            return 'Closure';
+        }
+
+        return implode('::', $this->action);
+    }
+
     public function getParsedPattern()
     {
-        return '/^\/?' . strtr($this->pattern, $this->getPatternTranslations()) . '\/?$/';
+        $translations = ['\\' => '\\\\', '/' => '\/', '$' => '\$'] + $this->getPatternTranslations();
+
+        $regex = strtr($this->pattern, $translations);
+
+        if (strpos($regex, '?') === 0) {
+
+            $regex = ltrim($regex, '?');
+        }
+
+        return '/^\/?' . strtr($this->pattern, $translations) . '\/?$/';
     }
 
     protected function getPatternTranslations()
@@ -279,6 +302,31 @@ class Route
         }
 
         throw new RouteException("The '{$uri}' doesn't contains result for current route");
+    }
+
+    /**
+     * Generates the uri from current route
+     * 
+     * @param array $parameters
+     * @return string
+     * */
+    public function toUri(array $parameters = [])   
+    {
+        
+        $pattern = $this->getPattern();
+
+        $wildcardsRegexes = $this->wildcardsToRegexGroups(
+            $matches = $this->getPatternWildcards()
+        );
+
+        $parameters = array_slice($parameters, 0, count($wildcardsRegexes));
+        
+        $this->validateParametersByWildcards($matches, $parameters);
+
+        $uri = preg_replace($wildcardsRegexes, $parameters, $pattern, 1);
+
+        return '/' . rtrim($uri, '/');
+
     }
 
 
@@ -378,5 +426,90 @@ class Route
         }
 
         return true;
+    }
+
+    /**
+     * 
+     * @return string
+     * */
+    protected function wildcardsToRegex()
+    {
+        $wildcards = array_map('preg_quote', array_keys($this->getPatternTranslations()));
+
+        return sprintf('/%s/', implode('|', $wildcards));
+    }
+
+    /**
+     * 
+     * @param array $wildcards
+     * @param string $delimiter
+     * @return array
+     * */
+    protected function wildcardsToRegexGroups(array $wildcards, $delimiter = '/')
+    {   
+
+        $callback = function ($value) use ($delimiter) {
+
+            return '/' . preg_quote($value, $delimiter) . '/';
+        };       
+
+        return array_map($callback, $wildcards);
+
+    }
+
+    /**
+     * 
+     * 
+     * @param string $wildcard
+     * @param string|int $value
+     * @return boolean
+     * */
+    protected function validateParameterByWildcard($wildcard, $value)
+    {
+        if (isset($this->patternTranslations[$wildcard])) {
+
+            $regex = ltrim($this->patternTranslations[$wildcard], '?');
+
+            return preg_match("/^$regex$/", $value) >  0;
+        }
+
+        return false;
+    }       
+
+    /**
+     * 
+     * 
+     * @param array $wildcards
+     * @param array $parameters
+     * @return boolean
+     * */
+    protected function validateParametersByWildcards(array $wildcards, array $parameters)
+    {
+        foreach(array_map(null, $wildcards, $parameters) as $key => $data) {
+
+            list($wildcard, $param) = $data;
+
+            if (! $this->validateParameterByWildcard($wildcard, $param)) {
+                
+                $message = 'Unable to convert route to uri. Unexpected value "%s" in argument #%d';
+
+                throw new \UnexpectedValueException(sprintf($message, $param, $key));
+            }
+        }
+
+        return true;
+    }
+
+
+    /**
+     * Gets the wildcards of route pattern
+     * 
+     * @return array
+     * */
+    protected function getPatternWildcards()
+    {
+        preg_match_all($this->wildcardsToRegex(), $this->getPattern(), $matches);
+
+        return empty($matches[0]) ? [] : $matches[0];
     }
 }
