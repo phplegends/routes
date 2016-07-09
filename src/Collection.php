@@ -137,4 +137,42 @@ class Collection extends ListCollection
         });
     }
 
+    /**
+     * Filter by prefix name
+     *  
+     * @param string $name
+     * @return \PHPLegends\Routes\Collection
+     * */
+    public function filterByName($name)
+    {
+        return $this->filter(function (Route $route) use ($name)
+        {
+            return $route->getName() === $name;
+        });
+    }
+
+    /**
+     * Filter by prefix name
+     *  
+     * @param string $name
+     * @return \PHPLegends\Routes\Route
+     * */
+    public function findByName($name)
+    {
+        return $this->filterByName($name)->first();
+    }
+
+
+    public function firstOrFail(callable $callback = null)
+    {
+        $route = $this->first($callback);
+
+        if ($route === null) {
+
+            throw new Exceptions\NotFoundException('Route not found');
+        }
+
+        return $route;
+    }
+
 }
