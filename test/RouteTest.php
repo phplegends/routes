@@ -15,8 +15,8 @@ class RouteTest extends PHPUnit_Framework_TestCase
 		$this->route->addFilter('a', 'b', 'c');
 
 		$this->routeClosure = new Route('closure/{num}/{str?}', function ($a, $b = '__none__')
-		{ 
-			return "A|B = $a|$b"; 
+		{
+			return "A|B = $a|$b";
 
 		}, ['POST']);
 
@@ -26,7 +26,7 @@ class RouteTest extends PHPUnit_Framework_TestCase
 
 	public function testAllMethodsOfUriMatching()
 	{
-		
+
 		$result = $this->route->getResult('home/one/two');
 
 		// check the arguments
@@ -85,7 +85,7 @@ class RouteTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(['a', 'b', 'c'], $this->route->getFilters());
 
 		$this->assertEquals(['x', 'y', 'z'], $this->routeClosure->getFilters());
-	}	
+	}
 
 	public function testGetVerbs()
 	{
@@ -118,7 +118,7 @@ class RouteTest extends PHPUnit_Framework_TestCase
 		$route->addFilter('before.age');
 
 		$this->assertTrue($route->hasFilter('before.age'));
-		
+
 	}
 
 	public function testToUri()
@@ -170,6 +170,37 @@ class RouteTest extends PHPUnit_Framework_TestCase
 
 			$this->assertInstanceOf('UnexpectedValueException', $e);
 		}	
+	}
+	
+	public function testBarraInvertida()
+	{
+		$routes[1] = new Route('test/', function () {
+			return 'Com barra no final';
+		});
+
+		$routes[2] = new Route('test', function () {
+			return 'sem barra no final';
+		});
+
+		$routes[3] = new Route('/test', function () {
+			return 'sem barra no final';
+		});
+
+		$routes[4] = new Route('/test/', function () {
+			return 'sem barra no final';
+		});
+
+		foreach ($routes as $route) {
+
+			// Pelo amor de Deus, os tres tem que funcionar!
+
+			$this->assertTrue($route->isValid('test'));
+
+			$this->assertTrue($route->isValid('test/'));
+
+			$this->assertTrue($route->isValid('/test/'));
+
+		}
 	}
 
 }

@@ -12,13 +12,13 @@ class Route
 {
 
     /**
-     * 
+     *
      * @var string
      * */
     protected $verbs = ['*'];
 
     /**
-     * 
+     *
      * @var string
      * */
     protected $pattern;
@@ -43,7 +43,7 @@ class Route
     const ANY_METHOD_WILDCARD = '*';
 
     /**
-     * 
+     *
      * @var array
      * */
     protected $patternTranslations = [
@@ -57,7 +57,7 @@ class Route
 
     /**
      * The constructor
-     * 
+     *
      * @param string $pattern
      * @param string|Closure $action
      * @param array $verbs
@@ -77,7 +77,7 @@ class Route
 
     /**
      * Sets the action
-     * 
+     *
      * @param string $action
      * @throws \LengthException
      * @return self
@@ -108,13 +108,13 @@ class Route
 
     /**
      * Sets the pattern for route
-     * 
+     *
      * @param string $pattern
      * @return self
      * */
     public function setPattern($pattern)
-    {   
-        $this->pattern = ltrim($pattern, '/');
+    {
+        $this->pattern = trim($pattern, '/');
 
         return $this;
     }
@@ -132,7 +132,7 @@ class Route
 
     /**
      * Sets the verbs of route
-     * 
+     *
      * @param array|string $verbs
      * @return self
      * */
@@ -150,11 +150,11 @@ class Route
 
     /**
      * Asserts if http verb is accepted
-     * 
+     *
      * @param string $method
      * */
     public function acceptedVerb($verb)
-    {   
+    {
 
         if (isset($this->verbs[0]) && $this->verbs[0] == static::ANY_METHOD_WILDCARD) {
 
@@ -187,9 +187,9 @@ class Route
 
     /**
      * Forces the action to be returns Closure
-     * 
+     *
      * @todo isso está funcionando?
-     * 
+     *
      * @return \Closure
      * */
     public function getActionAsClosure()
@@ -245,7 +245,7 @@ class Route
 
     /**
      * Creates a new wildcard for regex
-     * 
+     *
      * @param string $wildcard
      * @param string $regex
      * @return self
@@ -259,9 +259,9 @@ class Route
 
     /**
      * Determines if uri matches with regex. If match, return params of uri
-     * 
+     *
      * @deprecated since 2016-07-02 (use isValid or getResult instead of)
-     * 
+     *
      * @param string $uri
      * @return false | array
      * */
@@ -276,7 +276,7 @@ class Route
     }
 
     /**
-     * 
+     *
      * @param string $uri
      * @return boolean
      * */
@@ -286,9 +286,9 @@ class Route
     }
 
     /**
-     * 
+     *
      * Get result of route based on uri
-     * 
+     *
      * @param string $uri
      * @return Result
      * @throws RouteException
@@ -332,10 +332,10 @@ class Route
 
     /**
      * Sets the name of route
-     * 
+     *
      * @param string $name
      * @throws \InvalidArgumentException
-     * 
+     *
      * */
     public function setName($name)
     {
@@ -344,25 +344,25 @@ class Route
             $this->name = $name;
 
             return $this;
-        }   
-        
+        }
+
         throw new \InvalidArgumentException('Name of route must be string or null value');
 
     }
 
     /**
      * Gets the name of route
-     * 
+     *
      * @return string
      * */
-    public function getName() 
+    public function getName()
     {
         return $this->name;
     }
 
     /**
      * Sets list of filters
-     * 
+     *
      * @param array $filters
      * @return self
      * */
@@ -375,7 +375,7 @@ class Route
 
     /**
      * Add filters
-     * 
+     *
      * @param string|array $filter
      * @return self
      * */
@@ -385,7 +385,7 @@ class Route
         $filters = is_array($filters) ? $filters : func_get_args();
 
         foreach ($filters as $filter) {
-            
+
             $this->filters[] = $filter;
         }
 
@@ -393,7 +393,7 @@ class Route
     }
 
     /**
-     * 
+     *
      * @return array
      * */
     public function getFilters()
@@ -403,7 +403,7 @@ class Route
 
     /**
      * Check if route contains a filter
-     * 
+     *
      * @return boolean
      * */
     public function hasFilter($name)
@@ -413,7 +413,7 @@ class Route
 
     /**
      * Validates if the action is valid
-     * 
+     *
      * @param string $controller
      * @param string $action
      * */
