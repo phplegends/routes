@@ -508,13 +508,4 @@ class Route
     {
         return $this->parameters;
     }
-
-    /**
-     * 
-     * 
-     * */
-    public function callAction()
-    {
-
-    }
 }
