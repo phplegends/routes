@@ -11,57 +11,43 @@ use PHPLegends\Routes\Exceptions\InvalidVerbException;
  * 
  * */
 class Dispatcher implements Dispatchable
-{	
+{   
+    use Traits\DispatcherTrait;
 
-	/**
-	 * 
-	 * @var string
-	 * */
-	protected $uri;
+    /**
+     * 
+     * @var string
+     * */
+    protected $uri;
 
-	/**
-	 * 
-	 * @param string|null
-	 * */
-	protected $verb;
-	/**
-	 * 
-	 * @param string $uri
-	 * @param array|string $verb
-	 * */
-	public function __construct($uri, $verb)
-	{
-		$this->uri = $uri;
+    /**
+     * 
+     * @param string|null
+     * */
+    protected $verb;
+    /**
+     * 
+     * @param string $uri
+     * @param string $verb
+     * */
+    public function __construct($uri, $verb)
+    {
+        $this->uri = $uri;
 
-		$this->verb = $verb;
-	}
+        $this->verb = $verb;
+    }
 
-	/**
-	 * 
-	 * @{inheritdoc}
-	 * */
-	public function dispatch(Router $router)
-	{
-		$routes = $router->getCollection()->filterByUri($this->uri);
+    /**
+     * 
+     * @{inheritdoc}
+     * */
+    public function dispatch(Router $router)
+    {
+        $route = $router->findRoute($this->uri, $this->verb);
 
-		if ($routes->isEmpty()) {
-			
-			throw new NotFoundException("Unable to find '{$this->uri}'");
-		}
+        $filterResult = $this->callRouteFilters($router, $route);
 
-		$route = $routes->findByVerb($this->verb);
-
-		if ($route === null) {
-
-			throw new InvalidVerbException(
-				sprintf('Invalid verb for route "%s"', $this->uri)
-			);
-		}
-
-		$filterResult = $router->getFilters()->processRouteFilters($route);
-
-		if ($filterResult !== null) return $filterResult;
-
-		return $route->getResult($this->uri)->invoke();
-	}
+        return $filterResult === null ? $this->callRouteAction($route) : $filterResult;
+        
+    }
 }

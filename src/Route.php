@@ -11,6 +11,8 @@ use PHPLegends\Routes\Exceptions\RouteException;
 class Route
 {
 
+    const ANY_METHOD_WILDCARD = '*';
+
     /**
      *
      * @var string
@@ -40,8 +42,18 @@ class Route
      * */
     protected $filters = [];
 
-    const ANY_METHOD_WILDCARD = '*';
+    /**
+     * 
+     * @var array
+     * */
+    protected $parameters = [];
 
+    /**
+     * 
+     * @var boolean
+     * */
+    protected $matched = false;
+    
     /**
      *
      * @var array
@@ -226,16 +238,15 @@ class Route
 
     public function getParsedPattern()
     {
-        $translations = ['\\' => '\\\\', '/' => '\/', '$' => '\$'] + $this->getPatternTranslations();
 
-        $regex = strtr($this->pattern, $translations);
+        $regex = strtr(addcslashes($this->pattern, '$/\\'), $this->getPatternTranslations());
 
         if (strpos($regex, '?') === 0) {
 
             $regex = ltrim($regex, '?');
         }
 
-        return '/^\/?' . strtr($this->pattern, $translations) . '\/?$/';
+        return '/^\/?' . $regex . '\/?$/';
     }
 
     protected function getPatternTranslations()
@@ -259,49 +270,22 @@ class Route
 
     /**
      * Determines if uri matches with regex. If match, return params of uri
-     *
-     * @deprecated since 2016-07-02 (use isValid or getResult instead of)
-     *
+     * 
      * @param string $uri
-     * @return false | array
+     * @return boolean
      * */
     public function match($uri)
     {
         if (preg_match($this->getParsedPattern(), trim($uri), $matches) > 0) {
 
-            return array_slice($matches, 1);
+            $parameters = array_slice($matches, 1);
+
+            $this->setParameters($parameters);
+
+            return true;
         }
 
         return false;
-    }
-
-    /**
-     *
-     * @param string $uri
-     * @return boolean
-     * */
-    public function isValid($uri)
-    {
-        return preg_match($this->getParsedPattern(), $uri) > 0;
-    }
-
-    /**
-     *
-     * Get result of route based on uri
-     *
-     * @param string $uri
-     * @return Result
-     * @throws RouteException
-     * */
-    public function getResult($uri)
-    {
-
-        if (preg_match($this->getParsedPattern(), $uri, $matches) > 0) {
-
-            return new Result($this->getActionAsCallable(), array_slice($matches, 1));
-        }
-
-        throw new RouteException("The '{$uri}' doesn't contains result for current route");
     }
 
     /**
@@ -511,5 +495,26 @@ class Route
         preg_match_all($this->wildcardsToRegex(), $this->getPattern(), $matches);
 
         return empty($matches[0]) ? [] : $matches[0];
+    }
+
+    public function setParameters(array $parameters)
+    {
+        $this->parameters = $parameters;
+
+        return $this;
+    }
+
+    public function getParameters()
+    {
+        return $this->parameters;
+    }
+
+    /**
+     * 
+     * 
+     * */
+    public function callAction()
+    {
+
     }
 }

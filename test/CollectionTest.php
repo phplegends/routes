@@ -20,8 +20,10 @@ class CollectionTest extends PHPUnit_Framework_TestCase
 
 	}
 
-	public function routeMethod($one, $two) {}
-
+	public function routeMethod($one, $two) 
+	{
+		
+	}
 
 	public function testMap()
 	{

@@ -2,6 +2,9 @@
 
 namespace PHPLegends\Routes;
 
+use PHPLegends\Routes\Exceptions\NotFoundException;
+use PHPLegends\Routes\Exceptions\InvalidVerbException;
+
 /**
  * This class is a tool for easy way for create routes in collection
  *
@@ -19,7 +22,7 @@ class Router
 	protected $prefixPath = '';
 
 	/**
-	 * @var \PHPLegends\Routes\RouteCollection
+	 * @var \PHPLegends\Routes\Collection
 	 *
 	 * */
 	protected $routes;
@@ -50,6 +53,12 @@ class Router
 	 * */
 	protected $defaultFilters = [];
 
+    /**
+     * 
+     * @var array
+     * */
+    protected $options  = [];
+
 	/**
 	 *
 	 * @param \PHPLegends\Routes\Collection | null $routes
@@ -74,7 +83,7 @@ class Router
 	{
 		return $this->routes->first(function ($route) use($uri) {
 
-			return $route->isValid($uri);
+			return $route->match($uri);
 		});
 	}
 
@@ -91,7 +100,6 @@ class Router
 
 	/**
 	 *
-	 *
 	 * @param string $uri
 	 * @param string $verb
 	 * @return \PHPLegends\Routes\Route | null
@@ -100,9 +108,32 @@ class Router
 	{
 		return $this->routes->first(function ($route) use ($uri, $verb) {
 
-			return $route->isValid($uri) && $route->acceptedVerb($verb);
+			return $route->acceptedVerb($verb) && $route->match($uri);
 		});
 	}
+
+    /**
+     * 
+     * @param string $uri
+     * @param string $verb
+     * @return 
+     * */
+    public function findRoute($uri, $verb)
+    {   
+        $routes = $this->getCollection()->filterByUri($uri);
+
+        if ($routes->isEmpty()) {
+
+            throw new NotFoundException('Could not find any route');
+        }
+
+        if ($route = $routes->findByVerb($verb)) {
+
+            return $route;
+        }
+
+        throw new InvalidVerbException(sprintf('Invalid verb %s', strtoupper($verb)));
+    }
 
 	/**
 	 * Returns route by given name

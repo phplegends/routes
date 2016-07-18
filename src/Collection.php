@@ -103,7 +103,7 @@ class Collection extends ListCollection
     {
         return function (Route $route) use ($uri) {
 
-            return $route->isValid($uri);
+            return $route->match($uri);
         };
     }
 
@@ -162,7 +162,13 @@ class Collection extends ListCollection
         return $this->filterByName($name)->first();
     }
 
-
+    /**
+     *      
+     * 
+     * @param callable|null $callback
+     * @return \PHPLegends\Routes\Route
+     * @throws PHPLegends\Routes\Exceptions\NotFoundException
+     * */
     public function firstOrFail(callable $callback = null)
     {
         $route = $this->first($callback);

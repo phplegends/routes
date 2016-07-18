@@ -27,19 +27,11 @@ class RouteTest extends PHPUnit_Framework_TestCase
 	public function testAllMethodsOfUriMatching()
 	{
 
-		$result = $this->route->getResult('home/one/two');
+		$result = $this->route->match('home/one/two');
 
 		// check the arguments
 
-		$this->assertEquals(['one', 'two'], $result->getArguments());
-
-		// Invoke the action
-
-		$result->invoke();
-
-		// is valid?
-
-		$this->assertTrue($this->route->isValid('home/hello/batman'));
+		$this->assertEquals(['one', 'two'], $this->route->getParameters());
 	}
 
 	public function _routeMethod($one, $two)
@@ -53,21 +45,21 @@ class RouteTest extends PHPUnit_Framework_TestCase
 	{
 		// Testing "optional" route pattern
 
-		$result = $this->routeClosure->getResult('closure/5');
+		$this->routeClosure->match('closure/5');
 
 		// check the arguments
 
-		$this->assertEquals(['5'], $result->getArguments());
+		$this->assertEquals(['5'], $this->routeClosure->getParameters());
 
 		// Invoke the action
 
-		$this->assertEquals('A|B = 5|__none__', $result->invoke());
+		//$this->assertEquals('A|B = 5|__none__', $result->invoke());
 
-		$result = $this->routeClosure->getResult('closure/5/title-of-post');
+		$this->routeClosure->match('closure/5/title-of-post');
 
-		$this->assertEquals(['5', 'title-of-post'], $result->getArguments());
+		$this->assertEquals(['5', 'title-of-post'], $this->routeClosure->getParameters());
 
-		$this->assertEquals('A|B = 5|title-of-post', $result());
+		//$this->assertEquals('A|B = 5|title-of-post', $result());
 
 	}
 
@@ -194,11 +186,11 @@ class RouteTest extends PHPUnit_Framework_TestCase
 
 			// Pelo amor de Deus, os tres tem que funcionar!
 
-			$this->assertTrue($route->isValid('test'));
+			$this->assertTrue($route->match('test'));
 
-			$this->assertTrue($route->isValid('test/'));
+			$this->assertTrue($route->match('test/'));
 
-			$this->assertTrue($route->isValid('/test/'));
+			$this->assertTrue($route->match('/test/'));
 
 		}
 	}
