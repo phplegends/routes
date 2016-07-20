@@ -236,6 +236,11 @@ class Route
         return implode('::', $this->action);
     }
 
+    /**
+     * 
+     * 
+     * @return string
+     * */
     public function getParsedPattern()
     {
 
@@ -278,9 +283,7 @@ class Route
     {
         if (preg_match($this->getParsedPattern(), trim($uri), $matches) > 0) {
 
-            $parameters = array_slice($matches, 1);
-
-            $this->setParameters($parameters);
+            $this->parameters = array_slice($matches, 1);
 
             return true;
         }
@@ -497,6 +500,12 @@ class Route
         return empty($matches[0]) ? [] : $matches[0];
     }
 
+    /**
+     * 
+     * 
+     * @param array $parameters
+     * @return self
+     * */
     public function setParameters(array $parameters)
     {
         $this->parameters = $parameters;
@@ -504,6 +513,10 @@ class Route
         return $this;
     }
 
+    /**
+     * 
+     * @return array
+     * */
     public function getParameters()
     {
         return $this->parameters;

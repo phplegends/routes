@@ -47,7 +47,6 @@ class Dispatcher implements Dispatchable
 
         $filterResult = $this->callRouteFilters($router, $route);
 
-        return $filterResult === null ? $this->callRouteAction($route) : $filterResult;
-        
+        return $filterResult === null ? $this->callRouteAction($route) : $filterResult;   
     }
 }
