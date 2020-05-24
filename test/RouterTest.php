@@ -141,9 +141,9 @@ class RouterTest extends PHPUnit_Framework_TestCase
 
     }
 
-    public function testRoutable()
+    public function testScaffold()
     {
-        $this->router->routable('Routable1', 'routable-class');
+        $this->router->scaffold('Routable1', 'routable-class');
 
         $this->assertInstanceOf(
             'PHPLegends\Routes\Route',
@@ -159,7 +159,7 @@ class RouterTest extends PHPUnit_Framework_TestCase
             $this->router->findByUriAndVerb('routable-class/login', 'PUT')
         );
 
-        $this->router->routable('Routable1', 'routable-controller');
+        $this->router->scaffold('Routable1', 'routable-controller');
 
         $this->assertInstanceOf(
             'PHPLegends\Routes\Route',
@@ -173,17 +173,46 @@ class RouterTest extends PHPUnit_Framework_TestCase
 
     }
 
-    public function testCrud()
+    public function testResource()
     {
 
         // Resgistry method if exists
 
-        $this->router->crud('Routable2', 'crud');
+        $this->router->resource('RoutableResource', 'routable-resource');
 
         $this->assertCount(
             5,
-            $this->router->getCollection()->filterByPrefixName('crud')
+            $this->router->getCollection()->filterByPrefixName('routable-resource')
         );
+
+        $this->assertInstanceOf(
+            'PHPLegends\Routes\Route',
+            $this->router->findByUriAndVerb('routable-resource', 'GET')
+        );
+
+        $this->assertInstanceOf(
+            'PHPLegends\Routes\Route',
+            $this->router->findByUriAndVerb('routable-resource', 'POST')
+        );
+
+        $this->assertInstanceOf(
+            'PHPLegends\Routes\Route',
+            $this->router->findByUriAndVerb('routable-resource/1', 'PUT')
+        );
+
+        $this->assertInstanceOf(
+            'PHPLegends\Routes\Route',
+            $this->router->findByUriAndVerb('routable-resource/1', 'DELETE')
+        );
+
+
+        $this->assertInstanceOf(
+            'PHPLegends\Routes\Route',
+            $this->router->findByUriAndVerb('routable-resource/1', 'GET')
+        );
+
+
+        $this->router->findByUriAndVerb('routable-resource/1', 'GET');
 
     }
 
@@ -191,7 +220,7 @@ class RouterTest extends PHPUnit_Framework_TestCase
     {
         $this->router->group(['namespace' => 'Routes'], function ($router)
         {
-            $router->routable('RoutableTarget', 'r-routable-target');
+            $router->scaffold('RoutableTarget', 'r-routable-target');
         });
 
         $route = $this->router->findByUriAndVerb('r-routable-target/page-contact', 'GET');

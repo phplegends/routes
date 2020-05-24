@@ -200,6 +200,10 @@ class RoutableInspector
         return $this->getClass() . '::' . $method;
     }
 
+    /**
+     * 
+     * @deprecated
+     */
     public function generateCrudRoutes(Router $router = null, $prefix = null)
     {
         $router ?: $router = new Router;
@@ -225,6 +229,30 @@ class RoutableInspector
         }
 
         return $router;
+    }
+
+    public function generateResourceRoutes(Router $router = null, $prefix)
+    {
+        $router ?: $router = new Router;
+
+        if ($prefix === null) {
+
+            $prefix = $this->buildUriPrefix(
+                $this->reflection->getShortName()
+            );
+        }
+
+        $controller = $this->getClass();
+
+        $router->get($prefix . '/', $controller . '::index', $prefix);
+        $router->post($prefix . '/', $controller . '::create', $prefix . '.create');
+        $router->put($prefix . '/{str}', $controller . '::update', $prefix . '.update');
+        $router->get($prefix . '/{str}', $controller . '::show', $prefix . '.show');
+        $router->delete($prefix . '/{str}', $controller . '::delete', $prefix . '.delete');
+
+
+        return $router;
+        
     }
 
     protected function buildCrudName($method, $prefix)

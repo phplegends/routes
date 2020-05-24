@@ -339,7 +339,7 @@ class Router
      * @param string $class
      * @return self
      * */
-    public function routable($class, $prefix = null)
+    public function scaffold($class, $prefix = null)
     {
         $class = $this->resolveRoutableClassValue($class);
 
@@ -356,13 +356,13 @@ class Router
      * @param string|null $prefix
      * */
 
-    public function crud($class, $prefix = null)
+    public function resource($class, $prefix = null)
     {
         $router = new static();
 
         $inspector = new RoutableInspector($class);
 
-        $router = $inspector->generateCrudRoutes(null, $prefix);
+        $router = $inspector->generateResourceRoutes(null, $prefix);
 
         $this->mergeRouter($router);
 
