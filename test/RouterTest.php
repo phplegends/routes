@@ -216,14 +216,46 @@ class RouterTest extends PHPUnit_Framework_TestCase
 
     }
 
+
+    public function testResourceWithGroup()
+    {
+        $me = $this;
+
+        $this->router->group([
+            'namespace' => 'Routes',
+            'filters'   => ['rr_a', 'rr_b'],
+            'prefix'    => 'prefix/'
+        ], function ($router) use($me) {
+
+            $router->resource('RoutableResource');
+
+            $me->assertEquals($router->getNamespace(), 'Routes');
+
+            $me->assertEquals($router->getDefaultFilters(), ['rr_a', 'rr_b']);
+
+            $route = $router->findByUriAndVerb('prefix/routable-resource/1', 'GET');
+
+            $me->assertEquals($route->getName(), 'routable-resource.show');
+
+            $me->assertEquals($route->getFilters(), ['rr_a', 'rr_b']);
+
+                
+        });
+    }
+
     public function testGroupRoutableClassNameResolution()
     {
-        $this->router->group(['namespace' => 'Routes'], function ($router)
+        $this->router->group([
+            'namespace' => 'Routes',
+            'filters'   => ['rr_y', 'rr_x'],
+            'prefix'    => 'prefix/'
+
+        ], function ($router)
         {
             $router->scaffold('RoutableTarget', 'r-routable-target');
         });
 
-        $route = $this->router->findByUriAndVerb('r-routable-target/page-contact', 'GET');
+        $route = $this->router->findByUriAndVerb('prefix/r-routable-target/page-contact', 'GET');
 
         $this->assertEquals(['GET', 'HEAD'], $route->getVerbs());
     }

@@ -176,10 +176,10 @@ class RoutableInspector
 
     }
 
-    public function buildUriPrefix($controller)
+    public static function buildUriPrefix($controller)
     {
 
-        return $this->camelCaseToHifen(
+        return static::camelCaseToHifen(
             preg_replace('/Controller$/', '', $controller)
         );
     }
@@ -211,7 +211,7 @@ class RoutableInspector
         if ($prefix === null) {
 
             $prefix = $this->buildUriPrefix(
-                $this->reflection->getShortName()
+                $this->getReflection()->getShortName()
             );
         }
 
@@ -231,30 +231,6 @@ class RoutableInspector
         return $router;
     }
 
-    public function generateResourceRoutes(Router $router = null, $prefix)
-    {
-        $router ?: $router = new Router;
-
-        if ($prefix === null) {
-
-            $prefix = $this->buildUriPrefix(
-                $this->reflection->getShortName()
-            );
-        }
-
-        $controller = $this->getClass();
-
-        $router->get($prefix . '/', $controller . '::index', $prefix);
-        $router->post($prefix . '/', $controller . '::create', $prefix . '.create');
-        $router->put($prefix . '/{str}', $controller . '::update', $prefix . '.update');
-        $router->get($prefix . '/{str}', $controller . '::show', $prefix . '.show');
-        $router->delete($prefix . '/{str}', $controller . '::delete', $prefix . '.delete');
-
-
-        return $router;
-        
-    }
-
     protected function buildCrudName($method, $prefix)
     {
         $verb = strtolower($this->getMethodVerb($method));
@@ -270,7 +246,7 @@ class RoutableInspector
 
     }
 
-    protected function camelCaseToHifen($camel)
+    protected static function camelCaseToHifen($camel)
     {
         return ltrim(strtolower(preg_replace('/[A-Z]/', '-$0', $camel)), '-');
     }

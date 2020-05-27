@@ -341,9 +341,13 @@ class Router
      * */
     public function scaffold($class, $prefix = null)
     {
-        $class = $this->resolveRoutableClassValue($class);
+		$class = $this->resolveRoutableClassValue($class);
+		
+		$options = ['namespace' => null] + $this->options;
 
-        $router = (new RoutableInspector($class))->generateRoutables(null, $prefix);
+		$router = new static(null, $options);
+
+        (new RoutableInspector($class))->generateRoutables($router, $prefix);
 
         $this->mergeRouter($router);
 
@@ -352,20 +356,23 @@ class Router
 
     /**
      *
-     * @param string $class
+     * @param string $controller
      * @param string|null $prefix
      * */
 
-    public function resource($class, $prefix = null)
+    public function resource($controller, $prefix = null)
     {
-        $router = new static();
 
-        $inspector = new RoutableInspector($class);
+		if ($prefix === null) {
+			$prefix = RoutableInspector::buildUriPrefix($controller);
+		}
 
-        $router = $inspector->generateResourceRoutes(null, $prefix);
-
-        $this->mergeRouter($router);
-
+		$this->get($prefix . '/', $controller . '::index', $prefix);
+        $this->post($prefix . '/', $controller . '::create', $prefix . '.create');
+        $this->put($prefix . '/{str}', $controller . '::update', $prefix . '.update');
+        $this->get($prefix . '/{str}', $controller . '::show', $prefix . '.show');
+		$this->delete($prefix . '/{str}', $controller . '::delete', $prefix . '.delete');
+	
         return $this;
 
     }
