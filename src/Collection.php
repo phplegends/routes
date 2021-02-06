@@ -2,6 +2,7 @@
 
 namespace PHPLegends\Routes;
 
+use PHPLegends\Collections\Collection as BaseCollection;
 use PHPLegends\Collections\ListCollection;
 
 /**
@@ -9,7 +10,7 @@ use PHPLegends\Collections\ListCollection;
  * 
  * @author Wallace de Souza Vizerra <wallacemaxters@gmail.com>
  * */
-class Collection extends ListCollection
+class Collection extends BaseCollection
 {
     /**
      * 
@@ -28,22 +29,21 @@ class Collection extends ListCollection
      * Adds route in collection 
      * 
      * @param Route $route
-     * @throws |UnexpectedValueException if non Route instance passed
+     * @throws \UnexpectedValueException if non Route instance passed
      * */
     public function add($route)
     {
-        if (! $route instanceof Route) {
-
-            throw new \UnexpectedValueException('Only Route can be added');
+        if ($route instanceof Route) {
+            return parent::add($route);
         }
 
-        return parent::add($route);
+        throw new \UnexpectedValueException('Only Route can be added');
     }
 
     /**
      * 
      * @param string|array $verb
-     * @return \PHPlegends\Route\Route | null
+     * @return \PHPlegends\Route\Route|null
     */
     public function findByVerb($verb)
     {
@@ -107,21 +107,6 @@ class Collection extends ListCollection
         };
     }
 
-    /**
-     * 
-     * @param callable $callback
-     * @return Listcollection
-     * */
-    public function map(callable $callback = null)
-    {   
-        $items = array_map(
-            $callback,
-            $this->all(),
-            $keys = $this->keys()
-        );
-
-        return new ListCollection(array_combine($keys, $items));
-    }
 
     /**
      * Filter by prefix name

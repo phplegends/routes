@@ -4,29 +4,30 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6e66bbeb98edb1069ce789875a3dcfeb",
+    "content-hash": "c448bc92041f4b532fc7a5f3f4482ca7",
     "packages": [
         {
             "name": "phplegends/collections",
-            "version": "1.0.3",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phplegends/collections.git",
-                "reference": "8c6d0024e06fcde3f416533ea8aa729e0d13e773"
+                "reference": "e7692451ddeec1a779fb071a17619a420f593340"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phplegends/collections/zipball/8c6d0024e06fcde3f416533ea8aa729e0d13e773",
-                "reference": "8c6d0024e06fcde3f416533ea8aa729e0d13e773",
+                "url": "https://api.github.com/repos/phplegends/collections/zipball/e7692451ddeec1a779fb071a17619a420f593340",
+                "reference": "e7692451ddeec1a779fb071a17619a420f593340",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.4.0"
+                "php": ">=7.2.0"
             },
             "require-dev": {
-                "victorjonsson/markdowndocs": "1.2.*"
+                "phpunit/phpunit": "^8.0"
             },
-            "type": "collection",
+            "default-branch": true,
+            "type": "package",
             "autoload": {
                 "psr-4": {
                     "PHPLegends\\Collections\\": "src/"
@@ -42,7 +43,11 @@
                     "email": "wallacemaxters@gmail.com"
                 }
             ],
-            "time": "2016-05-05T17:08:28+00:00"
+            "support": {
+                "issues": "https://github.com/phplegends/collections/issues",
+                "source": "https://github.com/phplegends/collections/tree/master"
+            },
+            "time": "2021-02-06T15:11:25+00:00"
         }
     ],
     "packages-dev": [
@@ -1454,10 +1459,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "phplegends/collections": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
-    "plugin-api-version": "1.1.0"
+    "plugin-api-version": "2.0.0"
 }

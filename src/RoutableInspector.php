@@ -99,7 +99,7 @@ class RoutableInspector
 
         $uri = $this->buildUriFromMethod($methodName, $prefix);
 
-        $action = $this->reflection->name . '::' . $methodName;
+        $action = [$this->reflection->name,  $methodName];
 
         return $router->$verb($uri, $action);
     }

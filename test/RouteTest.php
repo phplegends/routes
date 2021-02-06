@@ -8,11 +8,9 @@ class RouteTest extends PHPUnit_Framework_TestCase
 
 	public function setUp()
 	{
-		$this->route = new Route('/home/{str}/{str}', 'RouteTest::_routeMethod', ['GET', 'HEAD']);
+		$this->route = new Route('/home/{str}/{str}', [RouteTest::class, '_routeMethod'], ['GET', 'HEAD']);
 
 		$this->route->setName('controller.route');
-
-		$this->route->addFilter('a', 'b', 'c');
 
 		$this->routeClosure = new Route('closure/{num}/{str?}', function ($a, $b = '__none__')
 		{
@@ -20,8 +18,6 @@ class RouteTest extends PHPUnit_Framework_TestCase
 
 		}, ['POST']);
 
-
-		$this->routeClosure->addFilter(['x', 'y', 'z']);
 	}
 
 	public function testAllMethodsOfUriMatching()
@@ -72,13 +68,6 @@ class RouteTest extends PHPUnit_Framework_TestCase
 	}
 
 
-	public function testGetFilters()
-	{
-		$this->assertEquals(['a', 'b', 'c'], $this->route->getFilters());
-
-		$this->assertEquals(['x', 'y', 'z'], $this->routeClosure->getFilters());
-	}
-
 	public function testGetVerbs()
 	{
 		$route = new Route('/', function () {});
@@ -90,28 +79,6 @@ class RouteTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(['POST'], $this->routeClosure->getVerbs());
 	}
 
-	public function testAddFilters()
-	{
-		$route = new Route('/', function () {});
-
-		$route->addFilter('before.auth', 'before.age');
-
-		$route->addFilter(['x', 'y']);
-
-		$this->assertEquals(['before.auth', 'before.age', 'x', 'y'], $route->getFilters());
-	}
-
-	public function testHasFilter()
-	{
-		$route = new Route('/', function () {});
-
-		$this->assertFalse($route->hasFilter('before.age'));
-
-		$route->addFilter('before.age');
-
-		$this->assertTrue($route->hasFilter('before.age'));
-
-	}
 
 	public function testToUri()
 	{
@@ -127,9 +94,6 @@ class RouteTest extends PHPUnit_Framework_TestCase
 
 		$r5 = new Route('/home/{str?}', $fn);
 
-		$r6 = new Route('/home/{date?}', $fn);
-
-		$r7 = new Route('/home/{date}', $fn);
 
 		$this->assertEquals(
 			'/home/segment-string/3',
@@ -150,18 +114,6 @@ class RouteTest extends PHPUnit_Framework_TestCase
 
 		$this->assertEquals('/home/contact', $r5->toUri(['contact']));
 
-		$this->assertEquals('/home', $r6->toUri());
-
-		$this->assertEquals('/home/2016/07/02', $r6->toUri(['2016/07/02']));
-
-		try {
-
-			$this->assertEquals('/home', $r7->toUri());
-
-		} catch (\Exception $e) {
-
-			$this->assertInstanceOf('UnexpectedValueException', $e);
-		}	
 	}
 	
 	public function testBarraInvertida()

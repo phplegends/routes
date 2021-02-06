@@ -17,9 +17,9 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase
 
         $this->router->get('/user/{num}', $fn)->setName('user.show');
 
-        $this->router->get('/pages/{num?}', 'Routes\RoutableTarget::actionIndexGet')->setName('pages');
+        $this->router->get('/pages/{num?}', ['Routes\RoutableTarget', 'actionIndexGet'])->setName('pages');
 
-        $this->router->get('/post/{num}/{str?}', 'Routable1::actionLoginGet')->setName('post.show');
+        $this->router->get('/post/{num}/{str?}', ['Routable1', 'actionLoginGet'])->setName('post.show');
 
         $this->url = new UrlGenerator($this->router, 'http://phplegends.io/');
     }

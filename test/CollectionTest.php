@@ -10,7 +10,7 @@ class CollectionTest extends PHPUnit_Framework_TestCase
 	{
 		$routes = new Collection();
 
-		$route = new Route('/test/method/{str}/{str}', 'CollectionTest::routeMethod');
+		$route = new Route('/test/method/{str}/{str}', [Fake::class, 'routeMethod']);
 
 		$routes->add($route);
 

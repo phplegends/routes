@@ -27,12 +27,6 @@ class Router
 	 * */
 	protected $routes;
 
-	/**
-	 *
-	 * @var PHPLegends\Routes\FilterCollection
-	 * */
-
-	protected $filters;
 
 	/**
 	 *
@@ -66,9 +60,7 @@ class Router
 	 * */
 	public function __construct(Collection $routes = null, array $options = [])
 	{
-		$this->routes = $routes ?: new Collection;
-
-		$this->filters = new FilterCollection;
+		$this->routes = $routes ?? new Collection;
 
 		$options && $this->setOptions($options);
 	}
@@ -81,22 +73,11 @@ class Router
 	 * */
 	public function findByUri($uri)
 	{
-		return $this->routes->first(function ($route) use($uri) {
-
+		return $this->routes->first(function (Route $route) use($uri) {
 			return $route->match($uri);
 		});
 	}
 
-	/**
-	 * Dispatches the route via Dispatchable interface implementation
-	 *
-	 * @param \PHPLegends\Routes\Dispatchable $dispatchable
-	 *
-	 * */
-	public function dispatch(Dispatchable $dispatcher)
-	{
-		return $dispatcher->dispatch($this);
-	}
 
 	/**
 	 *
@@ -104,10 +85,9 @@ class Router
 	 * @param string $verb
 	 * @return \PHPLegends\Routes\Route | null
 	 * */
-	public function findByUriAndVerb($uri, $verb)
+	public function findByUriAndVerb(string $uri, string $verb)
 	{
 		return $this->routes->first(function ($route) use ($uri, $verb) {
-
 			return $route->acceptedVerb($verb) && $route->match($uri);
 		});
 	}
@@ -116,19 +96,13 @@ class Router
      * 
      * @param string $uri
      * @param string $verb
-     * @return 
+     * @return PHPLegends\Routes\Route|null
      * */
-    public function findRoute($uri, $verb)
+    public function findRoute(string $uri, string $verb)
     {   
-        $routes = $this->getCollection()->filterByUri($uri);
-
-        if ($routes->isEmpty()) {
-
-            throw new NotFoundException('Could not find any route');
-        }
-
+		$routes = $this->getCollection()->filterByUri($uri);
+		
         if ($route = $routes->findByVerb($verb)) {
-
             return $route;
         }
 
@@ -141,7 +115,7 @@ class Router
 	 * @param string $name
 	 * @return \PHPLegends\Routes\Route | null
 	*/
-	public function findByName($name)
+	public function findByName(string $name)
 	{
 		return $this->routes->first(function ($route) use($name)
 		{
@@ -154,7 +128,7 @@ class Router
 	 *
 	 * @param array $verbs
 	 * @param string $pattern
-	 * @param string $action
+	 * @param array|\Closure $action
 	 * @param null|string $name
 	 * @return \PHPLegends\Routes\Route
 	 * */
@@ -162,19 +136,11 @@ class Router
 	{
 
 		$pattern = $this->resolvePatternValue($pattern);
+		$name = $this->resolveNameValue($name);
 
-		$action  = $this->resolveActionValue($action);
+		$route = new Route($pattern, $action, $verbs, $name);
 
-		$name    = $this->resolveNameValue($name);
-
-		$route   = new Route($pattern, $action, $verbs, $name);
-
-		if ($filters = $this->getDefaultFilters()) {
-
-			$route->setFilters($filters);
-		}
-
-		$this->routes->add($route);
+		$this->routes->attach($route);
 
 		return $route;
 	}
@@ -183,10 +149,10 @@ class Router
 	 * Create new row and add in collection
 	 *
 	 * @param string $pattern
-	 * @param string|\Closure $action
+	 * @param array|\Closure $action
 	 * @param string|null $name
 	 * */
-	public function get($pattern, $action, $name = null)
+	public function get(string $pattern, $action, ?string $name = null)
 	{
 		return $this->addRoute(['GET', 'HEAD'], $pattern, $action, $name);
 	}
@@ -198,7 +164,7 @@ class Router
 	 * @param string|\Closure $action
 	 * @param string|null $name
 	 * */
-	public function put($pattern, $action, $name = null)
+	public function put(string $pattern, $action, ?string $name = null)
 	{
 		return $this->addRoute(['PUT'], $pattern, $action, $name);
 	}
@@ -210,7 +176,7 @@ class Router
 	 * @param string|\Closure $action
 	 * @param string|null $name
 	 * */
-	public function post($pattern, $action, $name = null)
+	public function post(string $pattern, $action, ?string $name = null)
 	{
 		return $this->addRoute(['POST'], $pattern, $action, $name);
 	}
@@ -287,33 +253,6 @@ class Router
 		return $this->routes;
 	}
 
-	/**
-	 * Gets the filters
-	 *
-	 * @return \PHPLegends\Routes\FilterCollection
-	 * */
-	public function getFilters()
-	{
-		return $this->filters;
-	}
-
-	/**
-	 * Add filter
-	 *
-	 * @param string $name
-	 * @param callable $callback
-	 * @return \PHPLegends\Routes\Filter
-	 *
-	 * */
-	public function addFilter($name, callable $callback)
-	{
-		$filter = new Filter($name, $callback);
-
-		$this->filters->add($filter);
-
-		return $filter;
-	}
-
 
 	/**
 	 * Create a group with specific options
@@ -327,32 +266,14 @@ class Router
 
 		$closure->bindTo($group)->__invoke($group);
 
-		$this->getCollection()->addAll($group->getCollection());
+		$this->getCollection()->merge(
+			$group->getCollection()->all()
+		);
 
 		return $this;
 
 	}
 
-    /**
-     * Import all routable method for a class
-     *
-     * @param string $class
-     * @return self
-     * */
-    public function scaffold($class, $prefix = null)
-    {
-		$class = $this->resolveRoutableClassValue($class);
-		
-		$options = ['namespace' => null] + $this->options;
-
-		$router = new static(null, $options);
-
-        (new RoutableInspector($class))->generateRoutables($router, $prefix);
-
-        $this->mergeRouter($router);
-
-        return $this;
-    }
 
     /**
      *
@@ -367,50 +288,16 @@ class Router
 			$prefix = RoutableInspector::buildUriPrefix($controller);
 		}
 
-		$this->get($prefix . '/', $controller . '::index', $prefix);
-        $this->post($prefix . '/', $controller . '::create', $prefix . '.create');
-        $this->put($prefix . '/{str}', $controller . '::update', $prefix . '.update');
-        $this->get($prefix . '/{str}', $controller . '::show', $prefix . '.show');
-		$this->delete($prefix . '/{str}', $controller . '::delete', $prefix . '.delete');
+		$this->get($prefix . '/', [$controller, 'index'], $prefix);
+        $this->post($prefix . '/', [$controller, 'create'], $prefix . '.create');
+        $this->put($prefix . '/{str}', [$controller, 'update'], $prefix . '.update');
+        $this->get($prefix . '/{str}', [$controller, 'show'], $prefix . '.show');
+		$this->delete($prefix . '/{str}', [$controller, 'delete'], $prefix . '.delete');
 	
         return $this;
 
     }
 
-    /**
-     * Gets the value of namespace.
-     *
-     * @return string
-     */
-    public function getNamespace()
-    {
-        return $this->namespace;
-    }
-
-    /**
-     * Sets the value of namespace.
-     *
-     * @param string $namespace the namespace
-     *
-     * @return self
-     */
-    public function setNamespace($namespace)
-    {
-        $this->namespace = $namespace;
-
-        return $this;
-    }
-
-
-    protected function resolveActionValue($action)
-    {
-    	if (is_string($action) && $ns = $this->getNamespace()) {
-
- 			return rtrim($ns, '\\') . '\\' . $action;
-    	}
-
-    	return $action;
-    }
 
     protected function resolvePatternValue($pattern)
     {
@@ -440,15 +327,6 @@ class Router
     	return $name;
     }
 
-    protected function resolveRoutableClassValue($class)
-    {
-        if (($ns = $this->getNamespace()) && strpos($class, '\\') !== 0) {
-
-            $class = $ns . '\\' . $class;
-        }
-
-        return $class;
-    }
 
     /**
      * Gets the value of prefixPath.
@@ -499,30 +377,6 @@ class Router
     }
 
     /**
-     * Gets the value of defaultFilters.
-     *
-     * @return array
-     */
-    public function getDefaultFilters()
-    {
-        return $this->defaultFilters;
-    }
-
-    /**
-     * Sets the value of defaultFilters.
-     *
-     * @param array|string $defaultFilters the default filters
-     *
-     * @return self
-     */
-    public function setDefaultFilters($defaultFilters)
-    {
-        $this->defaultFilters = (array) $defaultFilters;
-
-        return $this;
-    }
-
-    /**
      * Set value via array options
      *
      * @param array $args
@@ -530,32 +384,16 @@ class Router
      * */
     public function setOptions(array $args)
     {
-
     	$this->options = $args += [
-			'filters'    => [],
 			'name'      => null,
-			'namespace' => null,
 			'prefix'    => null,
     	];
-
-    	$args['namespace'] && $this->setNamespace($args['namespace']);
 
     	$args['prefix'] && $this->setPrefixPath($args['prefix']);
 
     	$args['name'] && $this->setPrefixName($args['name']);
 
-    	$args['filters'] && $this->setDefaultFilters($args['filters']);
-
     	return $this;
     }
 
-    protected function mergeCollections(Collection $collection)
-    {
-        $this->getCollection()->addAll($collection);
-    }
-
-    protected function mergeRouter(Router $router)
-    {
-        $this->mergeCollections($router->getCollection());
-    }
 }

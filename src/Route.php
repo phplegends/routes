@@ -15,7 +15,7 @@ class Route
 
     /**
      *
-     * @var string
+     * @var array
      * */
     protected $verbs = ['*'];
 
@@ -26,7 +26,7 @@ class Route
     protected $pattern;
 
     /**
-     * @var string|Closure
+     * @var array|Closure
      **/
     protected $action;
 
@@ -63,8 +63,6 @@ class Route
         '{num?}'  => '?(\d+)?',
         '{str}'   => '([A-Za-z0-9-_]+)',
         '{str?}'  => '?([A-Za-z0-9-_]+)?',
-        '{date}'  => '(\d{4}\/\d{2}\/\d{2})',
-        '{date?}' => '?(\d{4}\/\d{2}\/\d{2})?'
     ];
 
     /**
@@ -80,7 +78,7 @@ class Route
     {
         $this->setPattern($pattern);
 
-        $this->setVerbs($verbs);
+        $this->setVerbs(...$verbs);
 
         $this->setAction($action);
 
@@ -90,32 +88,21 @@ class Route
     /**
      * Sets the action
      *
-     * @param string $action
-     * @throws \LengthException
+     * @param array|closure $action
+     * @throws \InvalidArgumentException
      * @return self
      * */
-    public function setAction ($action)
+    public function setAction($action)
     {
-        if ($action instanceof \Closure) {
+        if ($action instanceof \Closure || is_array($action)) {
 
             $this->action = $action;
-
             return $this;
         }
 
-        $parts = explode('::', $action);
-
-        if (count($parts) != 2) {
-
-            throw new \LengthException('Malformed action string');
-        }
-
-        $this->validateRoutable($parts[0], $parts[1]);
-
-        $this->action = $parts;
-
-        return $this;
-
+        throw new \InvalidArgumentException(
+            sprintf('The $action argument should be a array or Closure. %s given',  is_object($action) ? get_class($action) : gettype($action))
+        );
     }
 
     /**
@@ -137,7 +124,7 @@ class Route
      *
      * @return string
      */
-    public function getPattern()
+    public function getPattern(): string
     {
         return $this->pattern;
     }
@@ -148,14 +135,14 @@ class Route
      * @param array|string $verbs
      * @return self
      * */
-    public function setVerbs($verbs)
+    public function setVerbs(string ...$verbs)
     {
-        $this->verbs = array_map('strtoupper', (array) $verbs);
+        $this->verbs = array_map('strtoupper', $verbs);
 
         return $this;
     }
 
-    public function getVerbs()
+    public function getVerbs(): array
     {
         return $this->verbs;
     }
@@ -165,11 +152,9 @@ class Route
      *
      * @param string $method
      * */
-    public function acceptedVerb($verb)
+    public function acceptedVerb(string $verb)
     {
-
-        if (isset($this->verbs[0]) && $this->verbs[0] == static::ANY_METHOD_WILDCARD) {
-
+        if (isset($this->verbs[0]) && $this->verbs[0] === static::ANY_METHOD_WILDCARD) {
             return true;
         }
 
@@ -184,13 +169,20 @@ class Route
         return $this->action;
     }
 
+
+    public function getActionName(): string 
+    {
+        $action = $this->getAction();
+
+        return is_array($action)  ? implode('::', $action) : 'Closure';
+    }
+
     /**
      * @return callable
      * */
     public function getActionAsCallable()
     {
         if ($this->action instanceof \Closure) {
-
             return $this->action;
         }
 
@@ -204,37 +196,20 @@ class Route
      *
      * @return \Closure
      * */
-    public function getActionAsClosure()
+    public function getActionAsClosure(): \Closure
     {
-        if ($this->action instanceof \Closure)
-        {
+        if ($this->action instanceof \Closure) {
             return $this->action;
         }
 
-        return function () {
+        return function (...$args) {
 
             $action = $this->getActionAsCallable();
 
-            return call_user_func_array($action, func_get_args());
+            return $action(...$args);
         };
     }
 
-
-    /**
-     * Gets the name of action
-     * 
-     * @return string
-     * */
-
-    public function getActionName()
-    {
-        if ($this->action instanceof \Closure) {
-
-            return 'Closure';
-        }
-
-        return implode('::', $this->action);
-    }
 
     /**
      * 
@@ -291,13 +266,104 @@ class Route
         return false;
     }
 
+
+    /**
+     * Sets the name of route
+     *
+     * @param string $name
+     * @throws \InvalidArgumentException
+     *
+     * */
+    public function setName(string $name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Gets the name of route
+     *
+     * @return string
+     * */
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+
+    /**
+     * 
+     * @return string
+     * */
+    protected function wildcardsToRegex(): string
+    {
+        $wildcards = array_map('preg_quote', array_keys($this->getPatternTranslations()));
+
+        return sprintf('/%s/', implode('|', $wildcards));
+    }
+
+    /**
+     * 
+     * @param array $wildcards
+     * @param string $delimiter
+     * @return array
+     * */
+    protected function wildcardsToRegexGroups(array $wildcards, $delimiter = '/'): array
+    {   
+
+        $callback = function ($value) use ($delimiter) {
+
+            return '/' . preg_quote($value, $delimiter) . '/';
+        };       
+
+        return array_map($callback, $wildcards);
+
+    }
+
+
+
+    /**
+     * Gets the wildcards of route pattern
+     * 
+     * @return array
+     * */
+    protected function getPatternWildcards(): array
+    {
+        preg_match_all($this->wildcardsToRegex(), $this->getPattern(), $matches);
+
+        return $matches[0] ?? [];
+    }
+
+    /**
+     * Sets the parameters
+     * 
+     * @param array $parameters
+     * @return self
+     * */
+    public function setParameters(array $parameters)
+    {
+        $this->parameters = $parameters;
+
+        return $this;
+    }
+
+    /**
+     * 
+     * @return array
+     * */
+    public function getParameters(): array
+    {
+        return $this->parameters;
+    }
+
     /**
      * Generates the uri from current route
      * 
      * @param array $parameters
      * @return string
      * */
-    public function toUri(array $parameters = [])   
+    public function toUri(array $parameters = []): string
     {
         
         $pattern = $this->getPattern();
@@ -315,136 +381,7 @@ class Route
         return '/' . rtrim($uri, '/');
 
     }
-
-
-    /**
-     * Sets the name of route
-     *
-     * @param string $name
-     * @throws \InvalidArgumentException
-     *
-     * */
-    public function setName($name)
-    {
-        if (is_string($name) || $name === null) {
-
-            $this->name = $name;
-
-            return $this;
-        }
-
-        throw new \InvalidArgumentException('Name of route must be string or null value');
-
-    }
-
-    /**
-     * Gets the name of route
-     *
-     * @return string
-     * */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    /**
-     * Sets list of filters
-     *
-     * @param array $filters
-     * @return self
-     * */
-    public function setFilters(array $filters)
-    {
-        $this->filters = $filters;
-
-        return $this;
-    }
-
-    /**
-     * Add filters
-     *
-     * @param string|array $filter
-     * @return self
-     * */
-    public function addFilter($filters)
-    {
-
-        $filters = is_array($filters) ? $filters : func_get_args();
-
-        foreach ($filters as $filter) {
-
-            $this->filters[] = $filter;
-        }
-
-        return $this;
-    }
-
-    /**
-     *
-     * @return array
-     * */
-    public function getFilters()
-    {
-        return $this->filters;
-    }
-
-    /**
-     * Check if route contains a filter
-     *
-     * @return boolean
-     * */
-    public function hasFilter($name)
-    {
-        return in_array($name, $this->filters, true);
-    }
-
-    /**
-     * Validates if the action is valid
-     *
-     * @param string $controller
-     * @param string $action
-     * */
-    protected function validateRoutable($controller, $action)
-    {
-
-        if (! method_exists($controller, $action)) {
-
-            throw new \InvalidArgumentException("Action {$controller}::{$action}() doesn't exist");
-        }
-
-        return true;
-    }
-
-    /**
-     * 
-     * @return string
-     * */
-    protected function wildcardsToRegex()
-    {
-        $wildcards = array_map('preg_quote', array_keys($this->getPatternTranslations()));
-
-        return sprintf('/%s/', implode('|', $wildcards));
-    }
-
-    /**
-     * 
-     * @param array $wildcards
-     * @param string $delimiter
-     * @return array
-     * */
-    protected function wildcardsToRegexGroups(array $wildcards, $delimiter = '/')
-    {   
-
-        $callback = function ($value) use ($delimiter) {
-
-            return '/' . preg_quote($value, $delimiter) . '/';
-        };       
-
-        return array_map($callback, $wildcards);
-
-    }
-
-    /**
+     /**
      * 
      * 
      * @param string $wildcard
@@ -485,40 +422,5 @@ class Route
         }
 
         return true;
-    }
-
-
-    /**
-     * Gets the wildcards of route pattern
-     * 
-     * @return array
-     * */
-    protected function getPatternWildcards()
-    {
-        preg_match_all($this->wildcardsToRegex(), $this->getPattern(), $matches);
-
-        return empty($matches[0]) ? [] : $matches[0];
-    }
-
-    /**
-     * 
-     * 
-     * @param array $parameters
-     * @return self
-     * */
-    public function setParameters(array $parameters)
-    {
-        $this->parameters = $parameters;
-
-        return $this;
-    }
-
-    /**
-     * 
-     * @return array
-     * */
-    public function getParameters()
-    {
-        return $this->parameters;
     }
 }

@@ -12,7 +12,7 @@
     ],
     "minimum-stability": "stable",
     "require": {
-        "phplegends/collections" :  "1.*"
+        "phplegends/collections" :  "dev-master"
     },
 
     "autoload" : {
@@ -27,5 +27,8 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^5.7"
+    },
+    "scripts": {
+        "test" : "vendor/bin/phpunit"
     }
 }
