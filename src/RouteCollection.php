@@ -2,42 +2,45 @@
 
 namespace PHPLegends\Routes;
 
-use PHPLegends\Collections\Collection as BaseCollection;
-use PHPLegends\Collections\ListCollection;
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
+use PHPLegends\Collections\Collection;
 
 /**
  * Collection of Routes
  * 
  * @author Wallace de Souza Vizerra <wallacemaxters@gmail.com>
  * */
-class Collection extends BaseCollection
+class RouteCollection implements IteratorAggregate, Countable
 {
+
     /**
-     * 
+     * routes
+     *
+     * @var array
+     */
+    protected $routes = [];
+
+    /**
+     *
+     * @param array $routes
+     */
+    public function __construct(array $routes = [])
+    {
+        $this->merge(...$routes);
+    }
+
+    /**
      * 
      * @param \PHPLegends\Routes\Route $route
      * @return self
     */
     public function attach(Route $route)
     {
-        $this->add($route);
+        $this->routes[] = $route;
 
         return $this;
-    }
-
-    /**
-     * Adds route in collection 
-     * 
-     * @param Route $route
-     * @throws \UnexpectedValueException if non Route instance passed
-     * */
-    public function add($route)
-    {
-        if ($route instanceof Route) {
-            return parent::add($route);
-        }
-
-        throw new \UnexpectedValueException('Only Route can be added');
     }
 
     /**
@@ -45,7 +48,7 @@ class Collection extends BaseCollection
      * @param string|array $verb
      * @return \PHPlegends\Route\Route|null
     */
-    public function findByVerb($verb)
+    public function findByVerb(string $verb)
     {
         return $this->first($this->getVerbFilter($verb));
     }
@@ -99,10 +102,9 @@ class Collection extends BaseCollection
      * @param string $uri
      * @return \Closure
      * */
-    protected function getUriFilter($uri)
+    protected function getUriFilter(string $uri)
     {
         return function (Route $route) use ($uri) {
-
             return $route->match($uri);
         };
     }
@@ -112,12 +114,11 @@ class Collection extends BaseCollection
      * Filter by prefix name
      *  
      * @param string $name
-     * @return \PHPLegends\Routes\Collection
+     * @return self
      * */
     public function filterByPrefixName($name)
     {
-        return $this->filter(function (Route $route) use ($name)
-        {
+        return $this->filter(function (Route $route) use ($name) {
             return strpos($route->getName(), $name) === 0;
         });
     }
@@ -164,6 +165,47 @@ class Collection extends BaseCollection
         }
 
         return $route;
+    }
+
+    public function filter(callable $callback = null): self
+    {
+        $routes = array_filter($this->all(), $callback);
+
+        return new static($routes);
+    }
+
+    public function count()
+    {
+        return count($this->all());
+    }
+
+    public function getIterator()
+    {
+        return new ArrayIterator($this->all());
+    }
+    
+    public function all(): array
+    {
+        return $this->routes;
+    }
+
+    public function first(callable $callback)
+    {
+        foreach ($this->all() as $route) {
+            if ($callback($route)) return $route;        
+        }
+    }
+
+    public function merge(Route ...$routes)
+    {
+        $this->routes = array_merge($this->routes, $routes);
+
+        return $this;
+    }
+
+    public function map(callable $callback): array
+    {
+        return array_map($callback, $this->all());
     }
 
 }

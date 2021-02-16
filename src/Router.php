@@ -2,7 +2,6 @@
 
 namespace PHPLegends\Routes;
 
-use PHPLegends\Routes\Exceptions\NotFoundException;
 use PHPLegends\Routes\Exceptions\InvalidVerbException;
 
 /**
@@ -15,37 +14,36 @@ use PHPLegends\Routes\Exceptions\InvalidVerbException;
 class Router
 {
 
-	/**
-	 * @var string
-	 *
-	 * */
-	protected $prefixPath = '';
+    /**
+     * @var string
+     *
+     * */
+    protected $prefixPath = '';
 
-	/**
-	 * @var \PHPLegends\Routes\Collection
-	 *
-	 * */
-	protected $routes;
+    /**
+     * @var \PHPLegends\Routes\Collection
+     *
+     * */
+    protected $routes;
 
+    /**
+     *
+     * @var string
+     * */
+    protected $namespace;
 
-	/**
-	 *
-	 * @var string
-	 * */
-	protected $namespace;
+    /**
+     *
+     * @var string
+     * */
+    protected $prefixName;
 
-	/**
-	 *
-	 * @var string
-	 * */
-	protected $prefixName;
-
-	/**
-	 * Default filters name for created route in collection
-	 *
-	 * @var array
-	 * */
-	protected $defaultFilters = [];
+    /**
+     * Default filters name for created route in collection
+     *
+     * @var array
+     * */
+    protected $defaultFilters = [];
 
     /**
      * 
@@ -53,44 +51,44 @@ class Router
      * */
     protected $options  = [];
 
-	/**
-	 *
-	 * @param \PHPLegends\Routes\Collection | null $routes
-	 * @param array $options
-	 * */
-	public function __construct(Collection $routes = null, array $options = [])
-	{
-		$this->routes = $routes ?? new Collection;
+    /**
+     *
+     * @param \PHPLegends\Routes\Collection | null $routes
+     * @param array $options
+     * */
+    public function __construct(RouteCollection $routes = null, array $options = [])
+    {
+        $this->routes = $routes ?? new RouteCollection;
 
-		$options && $this->setOptions($options);
-	}
+        $options && $this->setOptions($options);
+    }
 
-	/**
-	 * Finds the route via uri
-	 *
-	 * @param string $uri
-	 * @return \PHPLegends\Routes\Route | null
-	 * */
-	public function findByUri($uri)
-	{
-		return $this->routes->first(function (Route $route) use($uri) {
-			return $route->match($uri);
-		});
-	}
+    /**
+     * Finds the route via uri
+     *
+     * @param string $uri
+     * @return \PHPLegends\Routes\Route | null
+     * */
+    public function findByUri($uri)
+    {
+        return $this->getRouteCollection()->first(function (Route $route) use($uri) {
+            return $route->match($uri);
+        });
+    }
 
 
-	/**
-	 *
-	 * @param string $uri
-	 * @param string $verb
-	 * @return \PHPLegends\Routes\Route | null
-	 * */
-	public function findByUriAndVerb(string $uri, string $verb)
-	{
-		return $this->routes->first(function ($route) use ($uri, $verb) {
-			return $route->acceptedVerb($verb) && $route->match($uri);
-		});
-	}
+    /**
+     *
+     * @param string $uri
+     * @param string $verb
+     * @return \PHPLegends\Routes\Route | null
+     * */
+    public function findByUriAndVerb(string $uri, string $verb)
+    {
+        return $this->routes->first(function ($route) use ($uri, $verb) {
+            return $route->acceptedVerb($verb) && $route->match($uri);
+        });
+    }
 
     /**
      * 
@@ -100,8 +98,8 @@ class Router
      * */
     public function findRoute(string $uri, string $verb)
     {   
-		$routes = $this->getCollection()->filterByUri($uri);
-		
+        $routes = $this->getRouteCollection()->filterByUri($uri);
+        
         if ($route = $routes->findByVerb($verb)) {
             return $route;
         }
@@ -109,89 +107,89 @@ class Router
         throw new InvalidVerbException(sprintf('Invalid verb %s', strtoupper($verb)));
     }
 
-	/**
-	 * Returns route by given name
-	 *
-	 * @param string $name
-	 * @return \PHPLegends\Routes\Route | null
-	*/
-	public function findByName(string $name)
-	{
-		return $this->routes->first(function ($route) use($name)
-		{
-			return $route->getName() === $name;
-		});
-	}
+    /**
+     * Returns route by given name
+     *
+     * @param string $name
+     * @return \PHPLegends\Routes\Route | null
+    */
+    public function findByName(string $name)
+    {
+        return $this->routes->first(function ($route) use($name)
+        {
+            return $route->getName() === $name;
+        });
+    }
 
-	/**
-	 * Create a new route instance and attach to Collection
-	 *
-	 * @param array $verbs
-	 * @param string $pattern
-	 * @param array|\Closure $action
-	 * @param null|string $name
-	 * @return \PHPLegends\Routes\Route
-	 * */
-	public function addRoute(array $verbs, $pattern, $action, $name = null)
-	{
+    /**
+     * Create a new route instance and attach to Collection
+     *
+     * @param array $verbs
+     * @param string $pattern
+     * @param array|\Closure $action
+     * @param null|string $name
+     * @return \PHPLegends\Routes\Route
+     * */
+    public function addRoute(array $verbs, $pattern, $action, $name = null)
+    {
 
-		$pattern = $this->resolvePatternValue($pattern);
-		$name = $this->resolveNameValue($name);
+        $pattern = $this->resolvePatternValue($pattern);
+        $name = $this->resolveNameValue($name);
 
-		$route = new Route($pattern, $action, $verbs, $name);
+        $route = new Route($pattern, $action, $verbs, $name);
 
-		$this->routes->attach($route);
+        $this->routes->attach($route);
 
-		return $route;
-	}
+        return $route;
+    }
 
-	/**
-	 * Create new row and add in collection
-	 *
-	 * @param string $pattern
-	 * @param array|\Closure $action
-	 * @param string|null $name
-	 * */
-	public function get(string $pattern, $action, ?string $name = null)
-	{
-		return $this->addRoute(['GET', 'HEAD'], $pattern, $action, $name);
-	}
+    /**
+     * Create new row and add in collection
+     *
+     * @param string $pattern
+     * @param array|\Closure $action
+     * @param string|null $name
+     * */
+    public function get(string $pattern, $action, ?string $name = null)
+    {
+        return $this->addRoute(['GET', 'HEAD'], $pattern, $action, $name);
+    }
 
-	/**
-	 * Create new row and add in collection
-	 *
-	 * @param string $pattern
-	 * @param string|\Closure $action
-	 * @param string|null $name
-	 * */
-	public function put(string $pattern, $action, ?string $name = null)
-	{
-		return $this->addRoute(['PUT'], $pattern, $action, $name);
-	}
+    /**
+     * Create new row and add in collection
+     *
+     * @param string $pattern
+     * @param string|\Closure $action
+     * @param string|null $name
+     * */
+    public function put(string $pattern, $action, ?string $name = null)
+    {
+        return $this->addRoute(['PUT'], $pattern, $action, $name);
+    }
 
-	/**
-	 * Create new row and add in collection
-	 *
-	 * @param string $pattern
-	 * @param string|\Closure $action
-	 * @param string|null $name
-	 * */
-	public function post(string $pattern, $action, ?string $name = null)
-	{
-		return $this->addRoute(['POST'], $pattern, $action, $name);
-	}
+    /**
+     * Create new row and add in collection
+     *
+     * @param string $pattern
+     * @param string|\Closure $action
+     * @param string|null $name
+     * */
+    public function post(string $pattern, $action, ?string $name = null)
+    {
+        return $this->addRoute(['POST'], $pattern, $action, $name);
+    }
 
-	/**
-	 * Create new row and add in collection
-	 *
-	 * @param string $pattern
-	 * @param string|\Closure $action
-	 * @param string|null $name
-	 * */
-	public function delete($pattern, $action, $name = null)
-	{
-		return $this->addRoute(['DELETE'], $pattern, $action, $name);
-	}
+    /**
+     * Create new row and add in collection
+     *
+     * @param string $pattern
+     * @param string|\Closure $action
+     * @param string|null $name
+     * */
+    public function delete($pattern, $action, $name = null)
+    {
+        return $this->addRoute(['DELETE'], $pattern, $action, $name);
+    }
 
     /**
      * Create new row and add in collection
@@ -243,36 +241,36 @@ class Router
         return $this->addRoute(['HEAD'], $pattern, $action, $name);
     }
 
-	/**
-	 * Gets the route collection
-	 *
-	 * @return \PHPLegends\Routes\Collection
-	 * */
-	public function getCollection()
-	{
-		return $this->routes;
-	}
+    /**
+     * Gets the route collection
+     *
+     * @return \PHPLegends\Routes\Collection
+     * */
+    public function getRouteCollection()
+    {
+        return $this->routes;
+    }
 
 
-	/**
-	 * Create a group with specific options
-	 *
-	 * @param array $options
-	 * @param \Closure $closure
-	 * */
-	public function group(array $options, \Closure $closure)
-	{
-		$group = new static(null, $options);
+    /**
+     * Create a group with specific options
+     *
+     * @param array $options
+     * @param \Closure $closure
+     * */
+    public function group(array $options, \Closure $closure)
+    {
+        $group = new static(null, $options);
 
-		$closure->bindTo($group)->__invoke($group);
+        $closure->bindTo($group)->__invoke($group);
 
-		$this->getCollection()->merge(
-			$group->getCollection()->all()
-		);
+        $this->getRouteCollection()->merge(
+            ...$group->getRouteCollection()->all()
+        );
 
-		return $this;
+        return $this;
 
-	}
+    }
 
 
     /**
@@ -281,19 +279,15 @@ class Router
      * @param string|null $prefix
      * */
 
-    public function resource($controller, $prefix = null)
+    public function resource(string $controller, string $prefix)
     {
 
-		if ($prefix === null) {
-			$prefix = RoutableInspector::buildUriPrefix($controller);
-		}
-
-		$this->get($prefix . '/', [$controller, 'index'], $prefix);
+        $this->get($prefix . '/', [$controller, 'index'], $prefix);
         $this->post($prefix . '/', [$controller, 'create'], $prefix . '.create');
         $this->put($prefix . '/{str}', [$controller, 'update'], $prefix . '.update');
         $this->get($prefix . '/{str}', [$controller, 'show'], $prefix . '.show');
-		$this->delete($prefix . '/{str}', [$controller, 'delete'], $prefix . '.delete');
-	
+        $this->delete($prefix . '/{str}', [$controller, 'delete'], $prefix . '.delete');
+    
         return $this;
 
     }
@@ -301,12 +295,12 @@ class Router
 
     protected function resolvePatternValue($pattern)
     {
-    	if ($prefix = $this->getPrefixPath()) {
+        if ($prefix = $this->getPrefixPath()) {
 
-    		$pattern = $prefix . $pattern;
-    	}
+            $pattern = $prefix . $pattern;
+        }
 
-    	return $pattern === '' ? '/' : $pattern;
+        return $pattern === '' ? '/' : $pattern;
     }
 
     /**
@@ -317,14 +311,14 @@ class Router
      * */
     protected function resolveNameValue($name)
     {
-    	if ($name === null) return null;
+        if ($name === null) return null;
 
-    	if ($prefixName = $this->getPrefixName()) {
+        if ($prefixName = $this->getPrefixName()) {
 
-    		$name = $prefixName . $name;
-    	}
+            $name = $prefixName . $name;
+        }
 
-    	return $name;
+        return $name;
     }
 
 
@@ -384,16 +378,16 @@ class Router
      * */
     public function setOptions(array $args)
     {
-    	$this->options = $args += [
-			'name'      => null,
-			'prefix'    => null,
-    	];
+        $this->options = $args += [
+            'name'      => null,
+            'prefix'    => null,
+        ];
 
-    	$args['prefix'] && $this->setPrefixPath($args['prefix']);
+        $args['prefix'] && $this->setPrefixPath($args['prefix']);
 
-    	$args['name'] && $this->setPrefixName($args['name']);
+        $args['name'] && $this->setPrefixName($args['name']);
 
-    	return $this;
+        return $this;
     }
 
 }

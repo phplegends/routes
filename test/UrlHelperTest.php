@@ -1,9 +1,9 @@
 <?php
 
-use PHPLegends\Routes\UrlGenerator;
+use PHPLegends\Routes\UrlHelper;
 use PHPLegends\Routes\Router;
 
-class UrlGeneratorTest extends PHPUnit_Framework_TestCase
+class UrlHelperTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
@@ -21,7 +21,7 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase
 
         $this->router->get('/post/{num}/{str?}', ['Routable1', 'actionLoginGet'])->setName('post.show');
 
-        $this->url = new UrlGenerator($this->router, 'http://phplegends.io/');
+        $this->url = new UrlHelper($this->router->getRouteCollection(), 'http://phplegends.io/');
     }
 
     public function testGetBaseUrl()
@@ -46,24 +46,6 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase
         );
     }
 
-
-    public function testAction()
-    {
-        $this->assertEquals(
-            'http://phplegends.io/post/15/',
-            $this->url->action('Routable1::actionLoginGet', [15])
-        );
-
-        $this->assertEquals(
-            'http://phplegends.io/post/2000/title-of-post/',
-            $this->url->action('Routable1::actionLoginGet', [2000, 'title-of-post'])
-        );
-
-        $this->assertEquals(
-            'http://phplegends.io/pages/15/?order_by=id',
-            $this->url->action('Routes\RoutableTarget::actionIndexGet', 15, ['order_by' => 'id'])
-        );
-    }
 
     public function testRoute()
     {

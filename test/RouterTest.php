@@ -57,7 +57,7 @@ class RouterTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals('in_group.creator', $route->getName());
 
-        $this->assertCount(2, $this->router->getCollection()->filterByPrefixName('in_group'));
+        $this->assertCount(2, $this->router->getRouteCollection()->filterByPrefixName('in_group'));
 
     }
 
@@ -71,7 +71,7 @@ class RouterTest extends PHPUnit_Framework_TestCase
 
         $this->assertCount(
             5,
-            $this->router->getCollection()->filterByPrefixName('routable-resource')
+            $this->router->getRouteCollection()->filterByPrefixName('routable-resource')
         );
 
         $this->assertInstanceOf(
@@ -115,7 +115,7 @@ class RouterTest extends PHPUnit_Framework_TestCase
             'prefix'    => 'prefix/'
         ], function ($router) use($me) {
 
-            $router->resource(RoutableResource::class);
+            $router->resource(RoutableResource::class, 'routable-resource');
 
             $route = $router->findByUriAndVerb('prefix/routable-resource/1', 'GET');
 
